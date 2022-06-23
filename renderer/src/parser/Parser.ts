@@ -564,12 +564,14 @@ function parseLogbookArea (section: string[], item: ParsedItem) {
   if (section.length < 3) return 'SECTION_SKIPPED'
 
   // skip Area, parse Faction
-  const faction = STAT_BY_MATCH_STR(section[1])
+  const sectionElement = section[1]
+  const faction = STAT_BY_MATCH_STR(sectionElement)
   if (!faction) return 'SECTION_SKIPPED'
 
   const areaMods: ParsedModifier[] = [{
     info: { tags: [], type: ModifierType.Pseudo },
     stats: [{
+      flat: sectionElement,
       stat: faction.stat,
       translation: faction.matcher
     }]
@@ -583,6 +585,7 @@ function parseLogbookArea (section: string[], item: ParsedItem) {
       areaMods.push({
         info: { tags: [], type: modType },
         stats: [{
+          flat: line,
           stat: found.stat,
           translation: found.matcher,
           roll: { value: roll, min: roll, max: roll, dp: false, unscalable: true }
@@ -799,6 +802,7 @@ function parseAtzoatlRooms (section: string[], item: ParsedItem) {
         info: { tags: [], type: ModifierType.Pseudo },
         stats: [{
           stat: found.stat,
+          flat: line,
           translation: {
             string: (state === IncursionRoom.Open)
               ? found.matcher.string
@@ -835,12 +839,12 @@ function markupConditionParser (text: string) {
 
 function parseStatsFromMod (lines: string[], item: ParsedItem, modifier: ParsedModifier) {
   item.newMods.push(modifier)
-
   if (modifier.info.type === ModifierType.Veiled) {
     const found = STAT_BY_MATCH_STR(modifier.info.name!)
     if (found) {
       modifier.stats.push({
         stat: found.stat,
+        flat: modifier.info.name!,
         translation: found.matcher
       })
     } else {
@@ -855,7 +859,7 @@ function parseStatsFromMod (lines: string[], item: ParsedItem, modifier: ParsedM
   const statIterator = linesToStatStrings(lines)
   let stat = statIterator.next()
   while (!stat.done) {
-    const parsedStat = tryParseTranslation(stat.value, modifier.info.type)
+    const parsedStat = tryParseTranslation(stat.value, modifier)
     if (parsedStat) {
       modifier.stats.push(parsedStat)
       stat = statIterator.next(true)

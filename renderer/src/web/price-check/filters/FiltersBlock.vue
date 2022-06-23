@@ -46,6 +46,7 @@
           : t('Stats ignored')"
       />
     </div>
+    <filter-item-explicits :item="item" />
     <div v-if="!statsVisibility.disabled && hasStats" class="mb-4" :class="(presets.length > 1) ? 'mt-1' : 'mt-4'">
       <div class="flex" v-if="presets.length > 1">
         <div class="w-5 border-b border-gray-700" />
@@ -92,11 +93,13 @@ import FilterBtnLogical from './FilterBtnLogical.vue'
 import UnknownModifier from './UnknownModifier.vue'
 import { ItemFilters, StatFilter } from './interfaces'
 import { ParsedItem, ItemRarity, ItemCategory } from '@/parser'
+import FilterItemExplicits from './FilterItemExplicits.vue'
 
 export default defineComponent({
   name: 'FiltersBlock',
   emits: ['submit', 'preset'],
   components: {
+    FilterItemExplicits,
     FilterModifier,
     FilterBtnNumeric,
     FilterBtnLogical,

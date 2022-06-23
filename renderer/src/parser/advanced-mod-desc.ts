@@ -14,14 +14,20 @@ export interface ParsedModifier {
   stats: ParsedStat[]
 }
 
+export type Generation = 'suffix' | 'prefix' | 'corrupted' | 'eldritch'
+
 export interface ModifierInfo {
   type: ModifierType
-  generation?: 'suffix' | 'prefix' | 'corrupted' | 'eldritch'
+  generation?: Generation
   name?: string
   tier?: number
   rank?: number
   tags: string[]
   rollIncr?: number
+}
+
+export interface ViewModifier extends ModifierInfo {
+  flatStats?: string[]
 }
 
 export function parseModInfoLine (line: string, type: ModifierType): ModifierInfo {
@@ -154,6 +160,7 @@ export function applyIncr (mod: ModifierInfo, parsed: ParsedStat): ParsedStat | 
 
   return {
     stat: parsed.stat,
+    flat: parsed.flat,
     translation: parsed.translation,
     roll: {
       unscalable: roll.unscalable,

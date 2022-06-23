@@ -1,4 +1,5 @@
 export type { ParsedItem } from './ParsedItem'
+export type { ModifierInfo, ViewModifier } from './advanced-mod-desc'
 export { ItemRarity, ItemInfluence } from './ParsedItem'
 export { parseClipboard } from './Parser'
 export { ItemCategory } from './meta'

@@ -1,6 +1,6 @@
 import { CLIENT_STRINGS as _$, STAT_BY_MATCH_STR } from '@/assets/data'
 import type { StatMatcher, Stat } from '@/assets/data'
-import type { ModifierType } from './modifiers'
+import type { ParsedModifier } from './advanced-mod-desc'
 
 // This file is a little messy and scary,
 // but that's how stats translations are parsed :-D
@@ -11,6 +11,7 @@ const LOCALIZED_PAREN_RIGHT = /(?:\)|）)\s*$/
 export interface ParsedStat {
   readonly stat: Stat
   readonly translation: StatMatcher
+  flat: string
   roll?: {
     unscalable: boolean
     legacy?: true
@@ -118,18 +119,16 @@ function * _statPlaceholderGenerator (stat: string) {
 
       yield {
         stat: replaced,
-        values: matches
-          .filter((_, idx) => !replacements.includes(idx)) as
-            Array<Pick<typeof matches[number], 'roll' | 'bounds' | 'decimal'>>
+        values: matches.filter((_, idx) => !replacements.includes(idx))
       }
     }
   }
 }
 
-export function tryParseTranslation (stat: StatString, modType: ModifierType): ParsedStat | undefined {
+export function tryParseTranslation (stat: StatString, modifier: ParsedModifier): ParsedStat | undefined {
   for (const combination of _statPlaceholderGenerator(stat.string)) {
     const found = STAT_BY_MATCH_STR(combination.stat)
-    if (!found || !found.stat.trade.ids[modType]) {
+    if (!found || !found.stat.trade.ids[modifier.info.type]) {
       continue
     }
 
@@ -181,6 +180,7 @@ export function tryParseTranslation (stat: StatString, modType: ModifierType): P
     if (!combination.values.length && found.matcher.value) {
       combination.values = [{
         roll: found.matcher.value,
+        rollStr: String(found.matcher.value),
         decimal: false,
         bounds: {
           min: found.matcher.value,
@@ -189,8 +189,11 @@ export function tryParseTranslation (stat: StatString, modType: ModifierType): P
       }]
     }
 
+    const flatRef = found.stat.ref.replaceAll('+#', '#')
+
     return {
       stat: found.stat,
+      flat: combination.values.length ? combination.values.reduce((flatStat, comb) => flatStat.replace('#', comb.rollStr), flatRef) : stat.string,
       translation: found.matcher,
       roll: combination.values.length
         ? {
