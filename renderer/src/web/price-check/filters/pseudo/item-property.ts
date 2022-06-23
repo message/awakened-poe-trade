@@ -243,6 +243,7 @@ function propToFilter (opts: {
       },
       stat: {
         stat: stat,
+        flat: stat.matchers[0].string,
         translation: stat.matchers[0],
         roll: {
           dp: opts.dp ?? false,
