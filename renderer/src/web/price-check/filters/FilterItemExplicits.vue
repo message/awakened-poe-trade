@@ -111,6 +111,7 @@ export default defineComponent({
 }
 
 .tag {
+  flex: 0 0 30px;
   border-right: 1px solid;
   padding-right: 3px;
   margin-bottom: 2px;
