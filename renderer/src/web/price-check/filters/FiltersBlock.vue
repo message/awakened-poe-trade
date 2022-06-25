@@ -59,12 +59,12 @@
         <div class="flex-1 border-b border-gray-700" />
       </div>
       <form @submit.prevent="handleStatsSubmit">
-        <filter-modifier v-for="filter of filteredStats" :key="filter.tag + '/' + filter.text"
+        <filter-modifier v-for="filter of sortedStats" :key="filter.tag + '/' + filter.text"
           :filter="filter"
           :item="item"
           :show-sources="showFilterSources"
           @submit="handleStatsSubmit" />
-        <div v-if="!filteredStats.length && !showUnknownMods"
+        <div v-if="!sortedStats.length && !showUnknownMods"
           class="border-b border-gray-700 py-2">{{ t('No relevant stats were found') }}</div>
         <template v-if="showUnknownMods">
           <unknown-modifier v-for="stat of item.unknownModifiers" :key="stat.type + '/' + stat.text"
@@ -75,8 +75,8 @@
       <div class="flex gap-x-4">
         <button @click="statsVisibility.disabled = !statsVisibility.disabled" class="bg-gray-700 px-2 py-1 text-gray-400 leading-none rounded-b w-40"
           >{{ t('Collapse') }} <i class="fas fa-chevron-up pl-1 text-xs text-gray-600"></i></button>
-        <ui-toggle v-if="filteredStats.length != stats.length"
-          v-model="showHidden" class="text-gray-400 pt-2">{{ t('Hidden') }}</ui-toggle>
+<!--        <ui-toggle v-if="sortedStats.length != stats.length"-->
+<!--          v-model="showHidden" class="text-gray-400 pt-2">{{ t('Hidden') }}</ui-toggle>-->
         <!-- <ui-toggle
           v-model="showFilterSources" class="ml-auto text-gray-400 pt-2">{{ t('Mods') }}</ui-toggle> -->
       </div>
@@ -125,11 +125,9 @@ export default defineComponent({
   },
   setup (props, ctx) {
     const statsVisibility = shallowReactive({ disabled: false })
-    const showHidden = shallowRef(false)
     const showFilterSources = shallowRef(false)
 
     watch(() => props.item, () => {
-      showHidden.value = false
       statsVisibility.disabled = false
     })
 
@@ -143,17 +141,21 @@ export default defineComponent({
     return {
       t,
       statsVisibility,
-      showHidden,
       showFilterSources,
       totalSelectedMods: computed(() => {
         return props.stats.filter(stat => !stat.disabled).length
       }),
-      filteredStats: computed(() => {
-        if (showHidden.value) {
-          return props.stats.filter(s => s.hidden)
-        } else {
-          return props.stats.filter(s => !s.hidden)
-        }
+      sortedStats: computed(() => {
+        // Hidden stats should be last
+        return props.stats.sort((a, b) => {
+          if (a.hidden && !b.hidden) {
+            return 1
+          }
+          if (!a.hidden && b.hidden) {
+            return -1
+          }
+          return 0
+        })
       }),
       showUnknownMods,
       hasStats: computed(() =>

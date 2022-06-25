@@ -1,7 +1,7 @@
 <template>
   <div v-if="explicits.prefixes.length || explicits.suffixes.length" class="mb-4">
     <div v-for="prefix of explicits.prefixes" v-if="explicits.prefixes" class="flex">
-      <div class="flex items-center justify-center" :class="[$style.tag, (prefix.type === 'crafted' ? $style.crafted : $style.prefix)]">
+      <div class="flex items-center justify-center" :class="[$style.tag, (prefix.type === 'crafted' ? $style.crafted :$style.prefix)]">
         <span v-if="prefix.type === 'crafted'">R{{ prefix.rank || 0 }}</span>
         <span v-else>P{{ prefix.tier || (prefix.type === 'veiled' ? 13 : 0) }}</span>
       </div>
@@ -10,7 +10,7 @@
           <div :class="[$style.veiledPrefix]"></div>
         </div>
         <div v-else>
-          <div :class="[prefix.type === 'crafted' ? $style.crafted : $style.stat]" v-for="flatStat of prefix.flatStats">
+          <div :class="[prefix.type === 'crafted' ? $style.crafted : prefix.type === 'fractured'? $style.fractured: $style.stat]" v-for="flatStat of prefix.flatStats">
             {{ flatStat }}
           </div>
         </div>
@@ -26,7 +26,7 @@
           <div :class="[$style.veiledSuffix]"></div>
         </div>
         <div v-else>
-          <div :class="[suffix.type === 'crafted' ? $style.crafted : $style.stat]" v-for="flatStat of suffix.flatStats">
+          <div :class="[suffix.type === 'crafted' ? $style.crafted : suffix.type === 'fractured'? $style.fractured: $style.stat]" v-for="flatStat of suffix.flatStats">
             {{ flatStat }}
           </div>
         </div>
@@ -36,9 +36,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, computed } from 'vue'
-import { useI18n } from 'vue-i18n'
-import type { ParsedItem, ViewModifier } from '@/parser'
+import {defineComponent, PropType, computed} from 'vue'
+import {useI18n} from 'vue-i18n'
+import type {ParsedItem, ViewModifier} from '@/parser'
 
 export default defineComponent({
   props: {
@@ -47,14 +47,15 @@ export default defineComponent({
       required: true
     }
   },
-  setup (props) {
-    const { t } = useI18n()
+  setup(props) {
+    const {t} = useI18n()
 
     const explicits = computed(() => {
-      const collection: { prefixes: ViewModifier[], suffixes: ViewModifier[] } = { prefixes: [], suffixes: [] }
+      const collection: { prefixes: ViewModifier[], suffixes: ViewModifier[] } = {prefixes: [], suffixes: []}
       if (props.item.newMods) {
+        console.log(props.item.newMods)
         return props.item.newMods.reduce((collection, mod) => {
-          const viewMod: ViewModifier = { ...mod.info, flatStats: mod.stats.map(stat => stat.flat) }
+          const viewMod: ViewModifier = {...mod.info, flatStats: mod.stats.map(stat => stat.flat)}
           if (mod.info.generation === 'prefix') {
             collection.prefixes.push(viewMod)
           }
@@ -132,6 +133,10 @@ export default defineComponent({
 
 .crafted {
   color: #B4B4FF
+}
+
+.fractured {
+  color: #A29162
 }
 </style>
 
