@@ -189,7 +189,7 @@ export function tryParseTranslation (stat: StatString, modifier: ParsedModifier)
       }]
     }
 
-    const flatRef = found.stat.ref.replaceAll('+#', '#')
+    const flatRef = found.matcher.string.replaceAll('+#', '#')
 
     return {
       stat: found.stat,
