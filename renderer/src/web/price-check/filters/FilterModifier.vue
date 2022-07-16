@@ -42,9 +42,10 @@
             </template>
           </ui-popover>
         </div>
-        <div class="flex-1 flex items-start">
+        <div class="flex-1 flex items-start gap-x-2">
           <span v-if="showTag"
-            :class="[$style['tag'], $style[`tag-${tag}`]]">{{ t(tag) }}</span>
+            :class="[$style['tag'], $style[`tag-${tag}`]]">{{ t(tag) }}{{ (filter.sources.length > 1) ? ` x ${filter.sources.length}` : null }}</span>
+          <filter-modifier-tiers :filter="filter" :item="item" />
           <filter-modifier-item-has-empty :filter="filter" />
         </div>
         <stat-roll-slider v-if="roll && roll.bounds"
@@ -70,13 +71,14 @@ import StatRollSlider from '../../ui/StatRollSlider.vue'
 import ItemModifierText from '../../ui/ItemModifierText.vue'
 import ModifierAnointment from './FilterModifierAnointment.vue'
 import FilterModifierItemHasEmpty from './FilterModifierItemHasEmpty.vue'
+import FilterModifierTiers from './FilterModifierTiers.vue'
 import { AppConfig } from '@/web/Config'
 import { ItemRarity, ParsedItem } from '@/parser'
 import { FilterTag, StatFilter } from './interfaces'
 import SourceInfo from './SourceInfo.vue'
 
 export default defineComponent({
-  components: { ItemModifierText, ModifierAnointment, FilterModifierItemHasEmpty, SourceInfo, StatRollSlider },
+  components: { ItemModifierText, ModifierAnointment, FilterModifierItemHasEmpty, FilterModifierTiers, SourceInfo, StatRollSlider },
   emits: ['submit'],
   props: {
     filter: {
@@ -267,10 +269,6 @@ export default defineComponent({
   display: none;
 }
 
-.filter:nth-child(4) > .mods {
-  display: block;
-}
-
 .tag {
   @apply px-1;
   @apply rounded;
@@ -282,6 +280,45 @@ export default defineComponent({
 .tag-eldritch {
   background: linear-gradient(to right, theme('colors.red.700'), theme('colors.blue.700'));
 }
+.tag-explicit-shaper,
+.tag-explicit-elder,
+.tag-explicit-crusader,
+.tag-explicit-hunter,
+.tag-explicit-redeemer,
+.tag-explicit-warlord,
+.tag-explicit-delve,
+.tag-explicit-veiled,
+.tag-explicit-incursion {
+  display: flex;
+  align-items: center;
+  @apply -mx-1 pl-0.5 gap-x-0.5 text-gray-600;
+  text-shadow: 0 0 4px theme('colors.gray.900');
+
+  &::before {
+    background-size: contain;
+    @apply w-5 h-5 -my-5;
+    content: '';
+  }
+}
+.tag-explicit-shaper::before {
+  background-image: url('/images/influence-Shaper.png'); }
+.tag-explicit-elder::before {
+  background-image: url('/images/influence-Elder.png'); }
+.tag-explicit-crusader::before {
+  background-image: url('/images/influence-Crusader.png'); }
+.tag-explicit-hunter::before {
+  background-image: url('/images/influence-Hunter.png'); }
+.tag-explicit-redeemer::before {
+  background-image: url('/images/influence-Redeemer.png'); }
+.tag-explicit-warlord::before {
+  background-image: url('/images/influence-Warlord.png'); }
+.tag-explicit-delve::before {
+  background-image: url('/images/delve.png'); }
+.tag-explicit-veiled::before {
+  background-image: url('/images/veiled.png'); }
+.tag-explicit-incursion::before {
+  background-image: url('/images/incursion.png'); }
+
 .tag-corrupted {
   @apply bg-red-700 text-red-100; }
 .tag-fractured {
@@ -289,13 +326,15 @@ export default defineComponent({
 .tag-crafted, .tag-synthesised {
   @apply bg-blue-600 text-blue-100; }
 .tag-implicit, .tag-explicit {
-  @apply -mx-1 text-gray-600; }
+  @apply -mx-1 text-gray-600;
+  text-shadow: 0 0 4px theme('colors.gray.900');
+}
 .tag-scourge {
   @apply bg-orange-600 text-white; }
 .tag-enchant {
   @apply bg-purple-600 text-purple-100; }
 .tag-pseudo {
-  @apply bg-gray-700 text-gray-900; }
+  @apply bg-gray-700 text-black; }
 </style>
 
 <style lang="postcss">
@@ -319,6 +358,17 @@ export default defineComponent({
 
 <i18n>
 {
+  "en": {
+    "explicit-shaper": "Shaper",
+    "explicit-elder": "Elder",
+    "explicit-crusader": "Crusader",
+    "explicit-hunter": "Hunter",
+    "explicit-redeemer": "Redeemer",
+    "explicit-warlord": "Warlord",
+    "explicit-delve": "Delve",
+    "explicit-veiled": "Veiled",
+    "explicit-incursion": "Incursion"
+  },
   "ru": {
     "Q {0}%": "К-во: {0}%",
     "DPS: #": "ДПС: #",
@@ -336,6 +386,15 @@ export default defineComponent({
     "synthesised": "синтезирован",
     "eldritch": "зловещий",
     "pseudo": "псевдо",
+    "explicit-shaper": "Создатель",
+    "explicit-elder": "Древний",
+    "explicit-crusader": "Крестоносец",
+    "explicit-hunter": "Охотник",
+    "explicit-redeemer": "Избавительница",
+    "explicit-warlord": "Вождь",
+    "explicit-delve": "Спуск",
+    "explicit-veiled": "Завуалирован",
+    "explicit-incursion": "Вмешательство",
     "Roll is not variable": "Ролл не варьируется",
     "Elemental damage is not the main source of DPS": "Стихийный урон не основной источник ДПСа",
     "Physical damage is not the main source of DPS": "Физический урон не основной источник ДПСа",
@@ -364,6 +423,15 @@ export default defineComponent({
     "synthesised": "追憶",
     "eldritch": "異能",
     "pseudo": "偽屬性",
+    "explicit-shaper": "塑界者",
+    "explicit-elder": "尊師",
+    "explicit-crusader": "聖戰軍王",
+    "explicit-hunter": "狩獵者",
+    "explicit-redeemer": "救贖者",
+    "explicit-warlord": "總督軍",
+    "explicit-delve": "掘獄",
+    "explicit-veiled": "隱匿",
+    "explicit-incursion": "時空穿越",
     "Roll is not variable": "數值不可變",
     "Elemental damage is not the main source of DPS": "元素傷害不是主要DPS來源",
     "Physical damage is not the main source of DPS": "物理傷害不是主要DPS來源",
