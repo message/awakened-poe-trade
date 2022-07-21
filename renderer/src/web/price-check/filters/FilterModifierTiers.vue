@@ -1,7 +1,7 @@
 <template>
   <div v-if="tags.length" class="flex items-center text-xs leading-none gap-x-1">
     <span v-for="tag of tags"
-      :class="$style[tag.type]">{{ t('Tier {0}', [tag.tier]) }}</span>
+      :class="$style[tag.type]">{{ tag.count> 1 ? t('Tier {0} x {1}', [tag.tier, tag.count]) :  t('Tier {0}', [tag.tier])}}</span>
   </div>
 </template>
 
@@ -10,6 +10,8 @@ import { defineComponent, PropType, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ItemCategory, ParsedItem } from '@/parser'
 import { FilterTag, StatFilter } from './interfaces'
+
+type Tiers = Record<string, { type: string, tier: number, count: number }>;
 
 export default defineComponent({
   props: {
@@ -25,7 +27,16 @@ export default defineComponent({
   setup (props) {
     const tags = computed(() => {
       const { filter, item } = props
-      const out: Array<{ type: string, tier: number }> = []
+      const out: Tiers = {}
+
+      const incrementTierCount = (out: Tiers, type:string, tier: number) => {
+        if (!out[type]) {
+          out[type] = { type, tier, count: 0 }
+        }
+        out[type] = { ...out[type], count: out[type].count + 1 }
+        return out
+      }
+
       for (const source of filter.sources) {
         const tier = source.modifier.info.tier
         if (!tier) continue
@@ -38,15 +49,15 @@ export default defineComponent({
           item.category !== ItemCategory.Jewel &&
           item.category !== ItemCategory.ClusterJewel
         )) {
-          if (tier === 1) out.push({ type: 'tier-1', tier })
-          else if (tier === 2) out.push({ type: 'tier-2', tier })
-        } else if (tier >= 2) {
+          if (tier === 1) incrementTierCount(out, 'tier-1', tier)
+          else if (tier === 2) incrementTierCount(out, 'tier-2', tier)
+          else if (tier === 3) incrementTierCount(out, 'tier-3', tier)
+        } else if (tier >= 3) {
           // fractured, explicit-* filters
-          out.push({ type: 'not-tier-1', tier })
+          incrementTierCount(out, 'not-tier-1', tier)
         }
       }
-      out.sort((a, b) => a.tier - b.tier)
-      return out
+      return Object.values(out).sort((a, b) => a.tier - b.tier)
     })
 
     const { t } = useI18n()
@@ -56,15 +67,22 @@ export default defineComponent({
 </script>
 
 <style lang="postcss" module>
-.tier-1, .tier-2, .not-tier-1 {
+.tier-1, .tier-2, .tier-3, .not-tier-1 {
   @apply rounded px-1;
 }
 
+.tier-1, .tier-2, .tier-3{
+  @apply border -my-px;
+}
+
 .tier-1 {
-  @apply bg-yellow-500 text-black;
+  @apply  bg-yellow-500 border-yellow-500 text-black;
 }
 .tier-2 {
-  @apply border -my-px border-yellow-500 text-yellow-500;
+  @apply  border-yellow-500 text-yellow-500;
+}
+.tier-3 {
+  @apply  border-yellow-300 text-yellow-300;
 }
 .not-tier-1 {
   @apply bg-gray-700 text-black;
@@ -74,10 +92,12 @@ export default defineComponent({
 <i18n>
 {
   "ru": {
-    "Tier {0}": "Ур {0}"
+    "Tier {0}": "Ур {0}",
+    "Tier {0} x {1}": "Ур {0} x {1}"
   },
   "cmn-Hant": {
-    "Tier {0}": "階層 {0}"
+    "Tier {0}": "階層 {0}",
+    "Tier {0} x {1}": "階層 {0} x {1}"
   }
 }
 </i18n>

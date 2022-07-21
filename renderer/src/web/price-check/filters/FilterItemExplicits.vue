@@ -32,13 +32,25 @@
         </div>
       </div>
     </div>
+    <div v-if="explicits.tierScore > 0" class="mt-2">
+      <div class="text-center text-xs">tier score: {{ explicits.tierScore.toFixed(2) }}%</div>
+    </div>
   </div>
+
 </template>
 
 <script lang="ts">
-import {defineComponent, PropType, computed} from 'vue'
-import {useI18n} from 'vue-i18n'
-import type {ParsedItem, ViewModifier} from '@/parser'
+import { defineComponent, PropType, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import type { ParsedItem, ViewModifier } from '@/parser'
+
+type ExplicitsCollection = {
+  prefixes: ViewModifier[],
+  suffixes: ViewModifier[],
+  itemCount: number,
+  totalScore: number,
+  tierScore: number,
+};
 
 export default defineComponent({
   props: {
@@ -47,26 +59,32 @@ export default defineComponent({
       required: true
     }
   },
-  setup(props) {
-    const {t} = useI18n()
+  setup (props) {
+    const { t } = useI18n()
 
     const explicits = computed(() => {
-      const collection: { prefixes: ViewModifier[], suffixes: ViewModifier[] } = {prefixes: [], suffixes: []}
+      const collection: ExplicitsCollection = { prefixes: [], suffixes: [], itemCount: 0, totalScore: 0, tierScore: 0 }
       if (props.item.newMods) {
         console.log(props.item.newMods)
         return props.item.newMods.reduce((collection, mod) => {
-          const viewMod: ViewModifier = {...mod.info, flatStats: mod.stats.map(stat => stat.flat)}
-          if (mod.info.generation === 'prefix') {
-            collection.prefixes.push(viewMod)
+          const viewMod: ViewModifier = { ...mod.info, flatStats: mod.stats.map(stat => stat.flat) }
+          const isPrefix = mod.info.generation === 'prefix'
+          const isSuffix = mod.info.generation === 'suffix'
+          if (isPrefix || isSuffix) {
+            console.log(viewMod)
+            const tier = viewMod.rank !== undefined ? viewMod.rank === 0 ? 1 : viewMod.rank : viewMod.tier !== undefined ? viewMod.tier : 13
+            collection.itemCount = collection.itemCount + 1
+            collection.totalScore = collection.totalScore + tier
+            collection[isPrefix ? 'prefixes' : 'suffixes'].push(viewMod)
           }
-          if (mod.info.generation === 'suffix') {
-            collection.suffixes.push(viewMod)
-          }
+
+          collection.tierScore = (collection.itemCount > 0 && collection.totalScore > 0) ? ((collection.itemCount / collection.totalScore) * 100) : 0
           return collection
         }, collection)
       }
       return collection
     })
+
     return {
       t,
       explicits
