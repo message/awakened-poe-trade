@@ -59,6 +59,7 @@ export interface ParsedItem {
     type: ModifierType
   }>
   heist?: {
+    wingsTotal?: number
     wingsRevealed?: number
     target?: 'Enchants' | 'Trinkets' | 'Gems' | 'Replicas'
   }

@@ -32,9 +32,9 @@
         </div>
       </div>
     </div>
-    <div v-if="explicits.tierScore > 0" class="mt-2">
-      <div class="text-center text-xs">tier score: {{ explicits.tierScore.toFixed(2) }}%</div>
-    </div>
+<!--    <div v-if="explicits.tierScore > 0" class="mt-2">-->
+<!--      <div class="text-center text-xs">tier score: {{ explicits.tierScore.toFixed(2) }}%</div>-->
+<!--    </div>-->
   </div>
 
 </template>

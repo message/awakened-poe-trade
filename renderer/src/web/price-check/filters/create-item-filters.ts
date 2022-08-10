@@ -141,6 +141,13 @@ export function createFilters (
         disabled: false
       }
     }
+
+    if (item.heist?.wingsTotal && item.heist.wingsTotal > 3) {
+      filters.heistWingsTotal = {
+        value: item.heist.wingsTotal,
+        disabled: false
+      }
+    }
   } else if (
     item.category === ItemCategory.ClusterJewel &&
     item.rarity !== ItemRarity.Unique

@@ -9,6 +9,8 @@
                           :filter="filters.areaLevel" name="Area Level:" />
       <filter-btn-numeric v-if="filters.heistWingsRevealed"
                           :filter="filters.heistWingsRevealed" name="Wings Revealed:" />
+      <filter-btn-numeric v-if="filters.heistWingsTotal"
+                          :filter="filters.heistWingsTotal" name="Total wings:" />
       <filter-btn-numeric v-if="filters.sentinelCharge"
                           :filter="filters.sentinelCharge" name="Charge:" />
       <filter-btn-logical v-if="filters.mapBlighted" readonly

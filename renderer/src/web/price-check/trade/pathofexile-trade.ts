@@ -380,6 +380,9 @@ export function createTradeRequest (filters: ItemFilters, stats: StatFilter[], i
   if (filters.heistWingsRevealed && !filters.heistWingsRevealed.disabled) {
     propSet(query.filters, 'heist_filters.filters.heist_wings.min', filters.heistWingsRevealed.value)
   }
+  if (filters.heistWingsTotal && !filters.heistWingsTotal.disabled) {
+    propSet(query.filters, 'heist_filters.filters.heist_max_wings.min', filters.heistWingsTotal.value)
+  }
 
   if (filters.sentinelCharge && !filters.sentinelCharge.disabled) {
     propSet(query.filters, 'sentinel_filters.filters.sentinel_durability.min', filters.sentinelCharge.value)
