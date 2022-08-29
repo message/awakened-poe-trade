@@ -196,6 +196,8 @@ export default defineComponent({
 &.active {
    background: linear-gradient(to bottom, theme('colors.gray.900'), theme('colors.gray.800'));
  }
+      <filter-btn-logical v-if="filters.relic"
+        :filter="filters.relic" text="Relic Unique" />
 }
 </style>
 

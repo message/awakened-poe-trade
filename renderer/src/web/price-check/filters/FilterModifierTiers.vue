@@ -47,7 +47,8 @@ export default defineComponent({
           filter.tag === FilterTag.Property
         ) && (
           item.category !== ItemCategory.Jewel &&
-          item.category !== ItemCategory.ClusterJewel
+          item.category !== ItemCategory.ClusterJewel &&
+          item.category !== ItemCategory.MemoryLine
         )) {
           if (tier === 1) incrementTierCount(out, 'tier-1', tier)
           else if (tier === 2) incrementTierCount(out, 'tier-2', tier)
