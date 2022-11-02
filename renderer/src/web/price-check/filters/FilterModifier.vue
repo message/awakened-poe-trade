@@ -99,6 +99,7 @@ export default defineComponent({
       props.filter.tag !== FilterTag.Property &&
       props.filter.tradeId[0] !== 'item.has_empty_modifier' &&
       props.item.info.refName !== 'Chronicle of Atzoatl' &&
+      props.item.info.refName !== 'Mirrored Tablet' &&
       !(props.item.rarity === ItemRarity.Unique && (
         props.filter.tag === FilterTag.Explicit ||
         props.filter.tag === FilterTag.Pseudo))
@@ -371,6 +372,7 @@ export default defineComponent({
   },
   "ru": {
     "Q {0}%": "К-во: {0}%",
+    "Base Percentile: #%": "Ролл значений базы: #%",
     "DPS: #": "ДПС: #",
     "Elemental DPS: #": "Стихийный ДПС: #",
     "Physical DPS: #": "Физический ДПС: #",

@@ -12,6 +12,7 @@ import { ItemCategory } from './meta'
 import { IncursionRoom, ParsedItem, ItemInfluence, ItemRarity } from './ParsedItem'
 import { magicBasetype } from './magic-name'
 import { isModInfoLine, groupLinesByMod, parseModInfoLine, parseModType, ModifierInfo, ParsedModifier, ENCHANT_LINE, SCOURGE_LINE } from './advanced-mod-desc'
+import { calcPropPercentile, QUALITY_STATS } from './calc-q20'
 
 type SectionParseResult =
   | 'SECTION_PARSED'
@@ -52,6 +53,7 @@ const parsers: Array<ParserFn | { virtual: VirtualParserFn }> = [
   parseHeistBlueprint,
   parseAreaLevel,
   parseAtzoatlRooms,
+  parseMirroredTablet,
   parseMirrored,
   parseSentinelCharge,
   parseLogbookArea,
@@ -64,7 +66,8 @@ const parsers: Array<ParserFn | { virtual: VirtualParserFn }> = [
   { virtual: transformToLegacyModifiers },
   { virtual: parseFractured },
   { virtual: parseBlightedMap },
-  { virtual: pickCorrectVariant }
+  { virtual: pickCorrectVariant },
+  { virtual: calcBasePercentile }
 ]
 
 export function parseClipboard (clipboard: string) {
@@ -789,7 +792,8 @@ function parseAreaLevelNested (section: string[], item: ParsedItem) {
 function parseAreaLevel (section: string[], item: ParsedItem) {
   if (
     item.info.refName !== 'Chronicle of Atzoatl' &&
-    item.info.refName !== 'Expedition Logbook'
+    item.info.refName !== 'Expedition Logbook' &&
+    item.info.refName !== 'Mirrored Tablet'
   ) return 'PARSER_SKIPPED'
 
   parseAreaLevelNested(section, item)
@@ -824,6 +828,28 @@ function parseAtzoatlRooms (section: string[], item: ParsedItem) {
           },
           roll: { value: state, min: state, max: state, dp: false, unscalable: true }
         }]
+      })
+    } else {
+      item.unknownModifiers.push({
+        text: line,
+        type: ModifierType.Pseudo
+      })
+    }
+  }
+
+  return 'SECTION_PARSED'
+}
+
+function parseMirroredTablet (section: string[], item: ParsedItem) {
+  if (item.info.refName !== 'Mirrored Tablet') return 'PARSER_SKIPPED'
+  if (section.length < 8) return 'SECTION_SKIPPED'
+
+  for (const line of section) {
+    const found = tryParseTranslation({ string: line, unscalable: true }, ModifierType.Pseudo)
+    if (found) {
+      item.newMods.push({
+        info: { tags: [], type: ModifierType.Pseudo },
+        stats: [found]
       })
     } else {
       item.unknownModifiers.push({
@@ -893,6 +919,23 @@ function parseStatsFromMod (lines: string[], item: ParsedItem, modifier: ParsedM
  */
 function transformToLegacyModifiers (item: ParsedItem) {
   item.statsByType = sumStatsByModType(item.newMods)
+}
+
+function calcBasePercentile (item: ParsedItem) {
+  if (!item.info.armour) return
+  // Base percentile is the same for all defences.
+  // Using `AR/EV -> ES -> WARD` order to improve accuracy
+  // of calculation (larger rolls = more precise).
+  const info = item.info.armour
+  if (item.armourAR) {
+    item.basePercentile = calcPropPercentile(item.armourAR, info.ar!, QUALITY_STATS.ARMOUR, item)
+  } else if (item.armourEV) {
+    item.basePercentile = calcPropPercentile(item.armourEV, info.ev!, QUALITY_STATS.EVASION, item)
+  } else if (item.armourES) {
+    item.basePercentile = calcPropPercentile(item.armourES, info.es!, QUALITY_STATS.ENERGY_SHIELD, item)
+  } else if (item.armourWARD) {
+    item.basePercentile = calcPropPercentile(item.armourWARD, info.ward!, QUALITY_STATS.WARD, item)
+  }
 }
 
 export function removeLinesEnding (

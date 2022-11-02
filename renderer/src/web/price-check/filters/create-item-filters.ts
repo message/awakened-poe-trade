@@ -1,6 +1,6 @@
 import type { ItemFilters } from './interfaces'
 import { ParsedItem, ItemCategory, ItemRarity } from '@/parser'
-import { tradeTag, PERMANENT_LEAGUES } from '../trade/common'
+import { tradeTag } from '../trade/common'
 import { ModifierType } from '@/parser/modifiers'
 import { BaseType, ITEM_BY_REF } from '@/assets/data'
 import { CATEGORY_TO_TRADE_ID } from '../trade/pathofexile-trade'
@@ -10,6 +10,7 @@ export const SPECIAL_SUPPORT_GEM = ['Empower Support', 'Enlighten Support', 'Enh
 interface CreateOptions {
   league: string
   chaosPriceThreshold: number
+  currency: string | undefined
   collapseListings: 'app' | 'api'
   activateStockFilter: boolean
   exact: boolean
@@ -24,8 +25,9 @@ export function createFilters (
     searchExact: {},
     trade: {
       offline: false,
-      onlineInLeague: PERMANENT_LEAGUES.includes(opts.league),
+      onlineInLeague: false,
       listed: undefined,
+      currency: opts.currency,
       league: opts.league,
       chaosPriceThreshold: opts.chaosPriceThreshold,
       collapseListings: opts.collapseListings
@@ -81,6 +83,12 @@ export function createFilters (
         disabled: false
       }
     }
+    if (item.info.refName === 'Mirrored Tablet') {
+      filters.areaLevel = {
+        value: item.areaLevel!,
+        disabled: false
+      }
+    }
     return filters
   }
 
@@ -117,7 +125,7 @@ export function createFilters (
       baseTypeTrade: t(opts, item.info)
     }
     filters.areaLevel = {
-      value: floorToBracket(item.areaLevel!, [1, 68, 73, 78, 81]),
+      value: floorToBracket(item.areaLevel!, [1, 68, 73, 78, 81, 83]),
       disabled: false
     }
   } else if (item.category === ItemCategory.HeistBlueprint) {
@@ -135,7 +143,7 @@ export function createFilters (
       disabled: false
     }
 
-    if (item.heist?.wingsRevealed && item.heist.wingsRevealed > 1) {
+    if (item.heist?.wingsRevealed) {
       filters.heistWingsRevealed = {
         value: item.heist.wingsRevealed,
         disabled: false

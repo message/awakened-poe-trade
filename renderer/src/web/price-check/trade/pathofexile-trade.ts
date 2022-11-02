@@ -135,6 +135,7 @@ interface TradeRequest { /* eslint-disable camelcase */
           ev?: FilterRange
           ward?: FilterRange
           block?: FilterRange
+          base_defence_percentile?: FilterRange
         }
       }
       weapon_filters?: {
@@ -256,7 +257,11 @@ export function createTradeRequest (filters: ItemFilters, stats: StatFilter[], i
   }
   const { query } = body
 
-  if (filters.trade.chaosPriceThreshold !== 0) {
+  if (filters.trade.currency) {
+    propSet(query.filters, 'trade_filters.filters.price.option', filters.trade.currency)
+  }
+
+  if (filters.trade.chaosPriceThreshold !== 0 && filters.trade.currency !== 'divine') {
     propSet(query.filters, 'trade_filters.filters.price.min', filters.trade.chaosPriceThreshold)
   }
 
@@ -417,12 +422,29 @@ export function createTradeRequest (filters: ItemFilters, stats: StatFilter[], i
           { id: TARGET_ID.TOTAL_MODIFIERS, value: { min: 6, max: undefined }, disabled: stat.disabled }
         ]
       })
+    } else if ( // https://github.com/SnosMe/awakened-poe-trade/issues/758
+      item.category === ItemCategory.Flask &&
+      stat.statRef === '#% increased Charge Recovery' &&
+      !stats.some(s => s.statRef === '#% increased effect')
+    ) {
+      const reducedEffectId = STAT_BY_REF('#% increased effect')!.trade.ids[ModifierType.Explicit][0]
+      query.stats.push({
+        type: 'not',
+        disabled: stat.disabled,
+        filters: [
+          { id: reducedEffectId, disabled: stat.disabled }
+        ]
+      })
     }
 
     if (stat.disabled) continue
 
     const input = stat.roll!
     switch (stat.tradeId[0] as InternalTradeId) {
+      case 'armour.base_percentile':
+        propSet(query.filters, 'armour_filters.filters.base_defence_percentile.min', typeof input.min === 'number' ? input.min : undefined)
+        propSet(query.filters, 'armour_filters.filters.base_defence_percentile.max', typeof input.max === 'number' ? input.max : undefined)
+        break
       case 'armour.armour':
         propSet(query.filters, 'armour_filters.filters.ar.min', typeof input.min === 'number' ? input.min : undefined)
         propSet(query.filters, 'armour_filters.filters.ar.max', typeof input.max === 'number' ? input.max : undefined)

@@ -21,3 +21,6 @@ win:
 linux:
   target:
   - "AppImage"
+appImage:
+  executableArgs:
+  - "--sandbox"

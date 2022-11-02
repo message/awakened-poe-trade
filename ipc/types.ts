@@ -49,7 +49,7 @@ export const defaultConfig = (): Config => ({
   overlayBackgroundClose: true,
   itemCheckKey: null,
   delveGridKey: null,
-  restoreClipboard: true,
+  restoreClipboard: false,
   commands: [{
     text: '/hideout',
     hotkey: 'F5',
@@ -134,10 +134,6 @@ export const defaultConfig = (): Config => ({
       maps: {
         showNewStats: false,
         selectedStats: [
-          {
-            matcher: 'Slaying Enemies close together has a #% chance to attract monsters from Beyond',
-            decision: 'desirable'
-          },
           {
             matcher: '#% maximum Player Resistances',
             decision: 'warning'

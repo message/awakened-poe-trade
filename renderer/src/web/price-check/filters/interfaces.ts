@@ -69,6 +69,7 @@ export interface ItemFilters {
     offline: boolean
     onlineInLeague: boolean
     listed: string | undefined
+    currency: string | undefined
     league: string
     chaosPriceThreshold: number
     collapseListings: 'api' | 'app'
@@ -106,6 +107,7 @@ export interface StatFilter {
 }
 
 export const INTERNAL_TRADE_IDS = [
+  'armour.base_percentile',
   'armour.armour',
   'armour.evasion_rating',
   'armour.energy_shield',
