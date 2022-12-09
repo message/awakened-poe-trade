@@ -1,7 +1,7 @@
 <template>
   <ui-popover :delay="[80, null]" placement="bottom-start" boundary="#price-window">
     <template #target>
-      <button class="text-gray-500 rounded mr-1 px-2 truncate">
+      <button class="text-gray-500 rounded mr-1 px-2 truncate" @click="toggleOffline">
         <span><i class="fas fa-history"></i> {{ t(filters.trade.offline ? 'Offline' : 'Online') }}</span>
         <span v-if="showLeagueName">, {{ filters.trade.league }}</span>
       </button>
@@ -66,6 +66,10 @@ export default defineComponent({
       t,
       tradeLeagues,
       showLeagueName: computed(() => defaultLeague.value !== props.filters.trade.league),
+      toggleOffline () {
+        const { filters } = props
+        filters.trade.offline = !filters.trade.offline
+      },
       onOfflineUpdate (offline: boolean) {
         const { filters } = props
         filters.trade.offline = offline

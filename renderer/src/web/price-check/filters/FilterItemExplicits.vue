@@ -65,7 +65,6 @@ export default defineComponent({
     const explicits = computed(() => {
       const collection: ExplicitsCollection = { prefixes: [], suffixes: [], itemCount: 0, totalScore: 0, tierScore: 0 }
       if (props.item.newMods) {
-        console.log(props.item.newMods)
         return props.item.newMods.reduce((collection, mod) => {
           const viewMod: ViewModifier = { ...mod.info, flatStats: mod.stats.map(stat => stat.flat) }
           const isPrefix = mod.info.generation === 'prefix'
@@ -77,8 +76,7 @@ export default defineComponent({
             collection.totalScore = collection.totalScore + tier
             collection[isPrefix ? 'prefixes' : 'suffixes'].push(viewMod)
           }
-
-          collection.tierScore = (collection.itemCount > 0 && collection.totalScore > 0) ? ((collection.itemCount / collection.totalScore) * 100) : 0
+ddd 0 && collection.totalScore > 0) ? ((collection.itemCount / collection.totalScore) * 100) : 0
           return collection
         }, collection)
       }

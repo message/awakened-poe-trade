@@ -37,6 +37,8 @@
                           :filter="filters.unidentified" text="Unidentified" />
       <filter-btn-logical v-if="filters.veiled"
                           :filter="filters.veiled" text="Veiled" />
+      <filter-btn-logical v-if="filters.relic"
+                          :filter="filters.relic" text="Relic Unique" />
       <filter-btn-logical v-if="filters.mirrored" active
                           :filter="filters.mirrored" :text="filters.mirrored.disabled ? 'Not Mirrored' : 'Mirrored'" />
       <filter-btn-logical v-if="hasStats"
@@ -136,7 +138,7 @@ export default defineComponent({
     })
 
     const showUnknownMods = computed(() =>
-        props.item.unknownModifiers.length &&
+      props.item.unknownModifiers.length &&
         props.item.category !== ItemCategory.Sentinel
     )
 
@@ -169,7 +171,7 @@ export default defineComponent({
       hiddenStats: computed(() => props.stats.filter(s => s.hidden)),
       showUnknownMods,
       hasStats: computed(() =>
-          props.stats.length ||
+        props.stats.length ||
           (showUnknownMods.value && props.item.rarity === ItemRarity.Unique) ||
           props.presets.length > 1),
       handleStatsSubmit () {
@@ -196,8 +198,6 @@ export default defineComponent({
 &.active {
    background: linear-gradient(to bottom, theme('colors.gray.900'), theme('colors.gray.800'));
  }
-      <filter-btn-logical v-if="filters.relic"
-        :filter="filters.relic" text="Relic Unique" />
 }
 </style>
 

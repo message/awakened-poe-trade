@@ -1,11 +1,5 @@
 <template>
 <div>
-  <div class="absolute animate__animated animate__fadeIn w-full h-full" @click="handlePatronsClick">
-    <button v-for="patron in patrons" :key="patron.from"
-      :class="[$style.rating, $style[`rating-${patron.style}`]]"
-      :style="{ left: `${patron.left * 100}%`, top: `${patron.top * 100}%`, zIndex: patron.style }"
-      >{{ patron.from }}{{ (patron.months > 1) ? ` x${patron.months}` : null }}</button>
-  </div>
   <div :class="$style.window" class="grow layout-column">
     <app-titlebar @close="cancel" :title="t('Settings - Awakened PoE Trade')" />
     <div class="flex grow min-h-0">
@@ -37,7 +31,6 @@
 import { defineComponent, shallowRef, computed, Component, PropType, nextTick, inject, reactive, watch, triggerRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { AppConfig, updateConfig, saveConfig } from '@/web/Config'
-import { APP_PATRONS } from '@/assets/data'
 import type { Config } from '@ipc/types'
 import type { Widget, WidgetManager } from '@/web/overlay/interfaces'
 import SettingsHotkeys from './hotkeys.vue'
@@ -66,15 +59,10 @@ export default defineComponent({
 
     const selectedComponent = shallowRef<Component>(SettingsHotkeys)
 
-    const patrons = shallowRef<Array<typeof APP_PATRONS[number] & { top: number, left: number }>>([])
-
     const configClone = shallowRef<Config | null>(null)
     watch(() => props.config.wmWants, (wmWants) => {
       if (wmWants === 'show') {
         configClone.value = reactive(JSON.parse(JSON.stringify(AppConfig())))
-        patrons.value = APP_PATRONS.map(row => ({
-          ...row, left: Math.random(), top: Math.random()
-        }))
       } else {
         configClone.value = null
         if (selectedWmId.value != null) {
@@ -127,17 +115,7 @@ export default defineComponent({
       menuItems,
       selectedComponent,
       configClone,
-      configWidget,
-      patrons,
-      handlePatronsClick () {
-        for (const box of patrons.value) {
-          box.top += (Math.random() - 0.5) * 0.2
-          box.left += (Math.random() - 0.5) * 0.1
-          box.top = Math.min(Math.max(box.top, 0), 1)
-          box.left = Math.min(Math.max(box.left, 0), 1)
-        }
-        triggerRef(patrons)
-      }
+      configWidget
     }
   }
 })
