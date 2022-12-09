@@ -1,30 +1,30 @@
 <template>
-<div>
-  <div :class="$style.window" class="grow layout-column">
-    <app-titlebar @close="cancel" :title="t('Settings - Awakened PoE Trade')" />
-    <div class="flex grow min-h-0">
-      <div class="pl-2 pt-2 bg-gray-900 flex flex-col gap-1" style="min-width: 10rem;">
-        <template v-for="item of menuItems">
-          <button v-if="item.type === 'menu-item'"
-            @click="item.select" :class="[$style['menu-item'], { [$style['active']]: item.isSelected }]">{{ item.name }}</button>
-          <div v-else
-            class="border-b mx-2 border-gray-800" />
-        </template>
-        <div class="text-gray-400 text-center mt-auto pr-3 pt-4 pb-12" style="max-width: fit-content; min-width: 100%;">{{ t('Support development on') }}<br> <a href="https://patreon.com/awakened_poe_trade" class="inline-flex mt-1" target="_blank"><img class="inline h-5" src="/images/Patreon.svg"></a></div>
-      </div>
-      <div class="text-gray-100 grow layout-column bg-gray-900">
-        <div class="grow overflow-y-auto bg-gray-800 rounded-tl">
-          <component v-if="configClone"
-            :is="selectedComponent" :config="configClone" :configWidget="configWidget" />
+  <div>
+    <div :class="$style.window" class="grow layout-column">
+      <app-titlebar @close="cancel" :title="t('Settings - Awakened PoE Trade')" />
+      <div class="flex grow min-h-0">
+        <div class="pl-2 pt-2 bg-gray-900 flex flex-col gap-1" style="min-width: 10rem;">
+          <template v-for="item of menuItems">
+            <button v-if="item.type === 'menu-item'"
+                    @click="item.select" :class="[$style['menu-item'], { [$style['active']]: item.isSelected }]">{{ item.name }}</button>
+            <div v-else
+                 class="border-b mx-2 border-gray-800" />
+          </template>
+          <div class="text-gray-400 text-center mt-auto pr-3 pt-4 pb-12" style="max-width: fit-content; min-width: 100%;">{{ t('Support development on') }}<br> <a href="https://patreon.com/awakened_poe_trade" class="inline-flex mt-1" target="_blank"><img class="inline h-5" src="/images/Patreon.svg"></a></div>
         </div>
-        <div class="border-t bg-gray-900 border-gray-600 p-2 flex justify-end gap-x-2">
-          <button @click="save" class="px-3 bg-gray-800 rounded">{{ t('Save') }}</button>
-          <button @click="cancel" class="px-3">{{ t('Cancel') }}</button>
+        <div class="text-gray-100 grow layout-column bg-gray-900">
+          <div class="grow overflow-y-auto bg-gray-800 rounded-tl">
+            <component v-if="configClone"
+                       :is="selectedComponent" :config="configClone" :configWidget="configWidget" />
+          </div>
+          <div class="border-t bg-gray-900 border-gray-600 p-2 flex justify-end gap-x-2">
+            <button @click="save" class="px-3 bg-gray-800 rounded">{{ t('Save') }}</button>
+            <button @click="cancel" class="px-3">{{ t('Cancel') }}</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 </template>
 
 <script lang="ts">
@@ -92,14 +92,14 @@ export default defineComponent({
     }, { deep: true })
 
     const menuItems = computed(() => flatJoin(
-      menuByType(configWidget.value?.wmType)
-        .map(group => group.map(component => ({
-          name: t(component.name),
-          select () { selectedComponent.value = component },
-          isSelected: (selectedComponent.value === component),
-          type: 'menu-item' as const
-        }))),
-      () => ({ type: 'separator' as const })
+        menuByType(configWidget.value?.wmType)
+            .map(group => group.map(component => ({
+              name: t(component.name),
+              select () { selectedComponent.value = component },
+              isSelected: (selectedComponent.value === component),
+              type: 'menu-item' as const
+            }))),
+        () => ({ type: 'separator' as const })
     ))
 
     return {
@@ -156,10 +156,10 @@ function flatJoin<T, J> (arr: T[][], joinEl: () => J) {
   overflow: hidden;
   @apply bg-gray-800;
   @apply rounded-b;
-  &:global {
-    animation-name: slideInDown;
-    animation-duration: 1s;
-  }
+&:global {
+   animation-name: slideInDown;
+   animation-duration: 1s;
+ }
 }
 
 .menu-item {
@@ -169,14 +169,14 @@ function flatJoin<T, J> (arr: T[][], joinEl: () => J) {
   @apply text-gray-600;
   @apply rounded-l;
 
-  &:hover {
-    @apply text-gray-100;
-  }
+&:hover {
+   @apply text-gray-100;
+ }
 
-  &.active {
-    @apply text-gray-400;
-    @apply bg-gray-800;
-  }
+&.active {
+   @apply text-gray-400;
+   @apply bg-gray-800;
+ }
 }
 
 .rating {
