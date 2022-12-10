@@ -76,7 +76,7 @@ export default defineComponent({
             collection.totalScore = collection.totalScore + tier
             collection[isPrefix ? 'prefixes' : 'suffixes'].push(viewMod)
           }
-ddd 0 && collection.totalScore > 0) ? ((collection.itemCount / collection.totalScore) * 100) : 0
+          collection.tierScore = (collection.itemCount > 0 && collection.totalScore > 0) ? ((collection.itemCount / collection.totalScore) * 100) : 0
           return collection
         }, collection)
       }
