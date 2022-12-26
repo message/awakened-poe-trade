@@ -37,8 +37,8 @@
                           :filter="filters.unidentified" text="Unidentified" />
       <filter-btn-logical v-if="filters.veiled"
                           :filter="filters.veiled" text="Veiled" />
-      <filter-btn-logical v-if="filters.relic"
-                          :filter="filters.relic" text="Relic Unique" />
+      <filter-btn-logical v-if="filters.foil"
+                          :filter="filters.foil" text="Foil Unique" />
       <filter-btn-logical v-if="filters.mirrored" active
                           :filter="filters.mirrored" :text="filters.mirrored.disabled ? 'Not Mirrored' : 'Mirrored'" />
       <filter-btn-logical v-if="hasStats"
@@ -82,7 +82,7 @@
         <ui-toggle v-if="hiddenStats.length > 0"
                    v-model="showHidden" class="text-gray-400 pt-2">{{ t('Hidden') }}</ui-toggle>
         <ui-toggle
-          v-model="showFilterSources" class="ml-auto text-gray-400 pt-2">{{ t('Mods') }}</ui-toggle>
+            v-model="showFilterSources" class="ml-auto text-gray-400 pt-2">{{ t('Mods') }}</ui-toggle>
       </div>
     </div>
   </div>
@@ -138,7 +138,7 @@ export default defineComponent({
     })
 
     const showUnknownMods = computed(() =>
-      props.item.unknownModifiers.length &&
+        props.item.unknownModifiers.length &&
         props.item.category !== ItemCategory.Sentinel
     )
 
@@ -171,7 +171,7 @@ export default defineComponent({
       hiddenStats: computed(() => props.stats.filter(s => s.hidden)),
       showUnknownMods,
       hasStats: computed(() =>
-        props.stats.length ||
+          props.stats.length ||
           (showUnknownMods.value && props.item.rarity === ItemRarity.Unique) ||
           props.presets.length > 1),
       handleStatsSubmit () {
