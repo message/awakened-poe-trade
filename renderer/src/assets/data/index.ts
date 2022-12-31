@@ -122,7 +122,7 @@ export function stat (text: string) {
   return text
 }
 
-;(async function initData () { /* eslint-disable no-lone-blocks */
+export async function initData () { /* eslint-disable no-lone-blocks */
   const { language } = AppConfig()
 
   {
@@ -142,4 +142,4 @@ export function stat (text: string) {
     CLIENT_STRINGS_REF = (await import(/* @vite-ignore */`${import.meta.env.BASE_URL}data/en/client_strings.js`)).default
     ITEM_DROP = await (await fetch(`${import.meta.env.BASE_URL}data/item-drop.json`)).json()
   }
-})()
+}
