@@ -120,7 +120,7 @@ export interface Config {
 }
 
 export const defaultConfig = (): Config => ({
-  configVersion: 14,
+  configVersion: 15,
   overlayKey: 'Shift + Space',
   overlayBackground: 'rgba(129, 139, 149, 0.15)',
   overlayBackgroundExclusive: true,
@@ -194,6 +194,7 @@ export const defaultConfig = (): Config => ({
       smartInitialSearch: true,
       lockedInitialSearch: true,
       activateStockFilter: false,
+      builtinBrowser: false,
       hotkey: 'D',
       hotkeyHold: 'Ctrl',
       hotkeyLocked: 'Ctrl + Alt + D',
@@ -496,6 +497,27 @@ function upgradeConfig (_config: Config): Config {
     config.configVersion = 14
   }
 
+  if (config.configVersion < 15) {
+    const priceCheck = config.widgets.find(w => w.wmType === 'price-check') as widget.PriceCheckWidget
+    priceCheck.builtinBrowser = false
+
+    const itemSearch = config.widgets.find(w => w.wmType === 'item-search') as widget.ItemSearchWidget
+    itemSearch.ocrGemsKey = null
+
+    const itemCheck = config.widgets.find(w => w.wmType === 'item-check') as widget.ItemCheckWidget
+    itemCheck.maps.profile = 1
+    for (const stat of itemCheck.maps.selectedStats) {
+      const p1decision =
+        (stat.decision === 'danger') ? 'd'
+          : (stat.decision === 'warning') ? 'w'
+              : (stat.decision === 'desirable') ? 'g' : 's'
+
+      stat.decision = `${p1decision}--`
+    }
+
+    config.configVersion = 15
+  }
+
   return config as unknown as Config
 }
 
@@ -601,6 +623,15 @@ function getConfigForHost (): HostConfig {
           }
         })
       }
+    } else if (widget.wmType === 'item-search') {
+      const itemSearch = widget as widget.ItemSearchWidget
+      if (itemSearch.ocrGemsKey) {
+        actions.push({
+          shortcut: itemSearch.ocrGemsKey,
+          keepModKeys: true,
+          action: { type: 'ocr-text', target: 'heist-gems' }
+        })
+      }
     }
   }
 
@@ -613,6 +644,7 @@ function getConfigForHost (): HostConfig {
     overlayKey: config.overlayKey,
     disableUpdateDownload: config.disableUpdateDownload,
     logLevel: config.logLevel,
-    windowTitle: config.windowTitle
+    windowTitle: config.windowTitle,
+    language: config.language
   }
 }

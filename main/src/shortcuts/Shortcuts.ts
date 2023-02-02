@@ -4,6 +4,7 @@ import { isModKey, KeyToElectron, mergeTwoHotkeys } from '../../../ipc/KeyToCode
 import { typeInChat, stashSearch } from './text-box'
 import { WidgetAreaTracker } from '../windowing/WidgetAreaTracker'
 import { HostClipboard } from './HostClipboard'
+import { OcrWorker } from '../vision/link-main'
 import type { ShortcutAction } from '../../../ipc/types'
 import type { Logger } from '../RemoteLogger'
 import type { OverlayWindow } from '../windowing/OverlayWindow'
@@ -20,12 +21,25 @@ export class Shortcuts {
   private areaTracker: WidgetAreaTracker
   private clipboard: HostClipboard
 
-  constructor (
+  static async create (
+    logger: Logger,
+    overlay: OverlayWindow,
+    poeWindow: GameWindow,
+    gameConfig: GameConfig,
+    server: ServerEvents
+  ) {
+    const ocrWorker = await OcrWorker.create()
+    const shortcuts = new Shortcuts(logger, overlay, poeWindow, gameConfig, server, ocrWorker)
+    return shortcuts
+  }
+
+  private constructor (
     private logger: Logger,
     private overlay: OverlayWindow,
     private poeWindow: GameWindow,
     private gameConfig: GameConfig,
-    private server: ServerEvents
+    private server: ServerEvents,
+    private ocrWorker: OcrWorker
   ) {
     this.areaTracker = new WidgetAreaTracker(server, overlay)
     this.clipboard = new HostClipboard(logger)
@@ -42,8 +56,10 @@ export class Shortcuts {
       })
     })
 
-    this.server.onEventAnyClient('CLIENT->MAIN::stash-search', ({ text }) => {
-      stashSearch(text, this.clipboard, this.overlay)
+    this.server.onEventAnyClient('CLIENT->MAIN::user-action', (e) => {
+      if (e.action === 'stash-search') {
+        stashSearch(e.text, this.clipboard, this.overlay)
+      }
     })
 
     // uIOhook.on('keydown', (e) => {
@@ -67,9 +83,10 @@ export class Shortcuts {
     })
   }
 
-  updateActions (actions: ShortcutAction[], stashScroll: boolean, restoreClipboard: boolean) {
+  updateActions (actions: ShortcutAction[], stashScroll: boolean, restoreClipboard: boolean, language: string) {
     this.stashScroll = stashScroll
     this.clipboard.updateOptions(restoreClipboard)
+    this.ocrWorker.updateOptions(language)
 
     const copyItemShortcut = mergeTwoHotkeys('Ctrl + C', this.gameConfig.showModsKey)
     if (copyItemShortcut !== 'Ctrl + C') {
@@ -152,6 +169,27 @@ export class Shortcuts {
             (entry.keepModKeys) ? entry.shortcut.split(' + ').filter(key => isModKey(key)) : undefined,
             this.gameConfig.showModsKey
           )
+        } else if (entry.action.type === 'ocr-text' && entry.action.target === 'heist-gems') {
+          if (process.platform !== 'win32') return
+
+          const { action } = entry
+          const pressTime = Date.now()
+          const imageData = this.poeWindow.screenshot()
+          this.ocrWorker.findHeistGems({
+            width: this.poeWindow.bounds.width,
+            height: this.poeWindow.bounds.height,
+            data: imageData
+          }).then(result => {
+            this.server.sendEventTo('last-active', {
+              name: 'MAIN->CLIENT::ocr-text',
+              payload: {
+                target: action.target,
+                pressTime,
+                ocrTime: result.elapsed,
+                paragraphs: result.recognized.map(p => p.text)
+              }
+            })
+          }).catch(() => {})
         }
       })
 

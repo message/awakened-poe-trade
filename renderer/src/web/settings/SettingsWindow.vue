@@ -10,6 +10,8 @@
             <div v-else
                  class="border-b mx-2 border-gray-800" />
           </template>
+        <button v-if="menuItems.length >= 4"
+          :class="$style['quit-btn']" @click="quit">{{ t('Quit') }}</button>
           <div class="text-gray-400 text-center mt-auto pr-3 pt-4 pb-12" style="max-width: fit-content; min-width: 100%;">
             {{ t('Support development on') }}<br> <a href="https://patreon.com/awakened_poe_trade" class="inline-flex mt-1" target="_blank"><img class="inline h-5" src="/images/Patreon.svg"></a>
           </div>
@@ -33,16 +35,26 @@
 import { defineComponent, shallowRef, computed, Component, PropType, nextTick, inject, reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { AppConfig, updateConfig, saveConfig, pushHostConfig, Config } from '@/web/Config'
+import { Host } from '@/web/background/IPC'
 import type { Widget, WidgetManager } from '@/web/overlay/interfaces'
 import SettingsHotkeys from './hotkeys.vue'
 import SettingsChat from './chat.vue'
 import SettingsGeneral from './general.vue'
+import SettingsAbout from './about.vue'
 import SettingsPricecheck from './price-check.vue'
 import SettingsItemcheck from './item-check.vue'
 import SettingsDebug from './debug.vue'
 import SettingsMaps from './maps/maps.vue'
 import SettingsStashSearch from './stash-search.vue'
 import SettingsStopwatch from './stopwatch.vue'
+import SettingsItemSearch from './item-search.vue'
+
+function quit () {
+  Host.sendEvent({
+    name: 'CLIENT->MAIN::user-action',
+    payload: { action: 'quit' }
+  })
+}
 
 export default defineComponent({
   props: {
@@ -89,14 +101,16 @@ export default defineComponent({
     }, { deep: true })
 
     const menuItems = computed(() => flatJoin(
-        menuByType(configWidget.value?.wmType)
-            .map(group => group.map(component => ({
-              name: t(component.name),
-              select () { selectedComponent.value = component },
-              isSelected: (selectedComponent.value === component),
-              type: 'menu-item' as const
-            }))),
-        () => ({ type: 'separator' as const })
+      menuByType(configWidget.value?.wmType)
+        .map(group => group.map(component => ({
+          name: t(component.name),
+          select () {
+            selectedComponent.value = component
+          },
+          isSelected: (selectedComponent.value === component),
+          type: 'menu-item' as const
+        }))),
+      () => ({ type: 'separator' as const })
     ))
 
     return {
@@ -111,9 +125,11 @@ export default defineComponent({
       cancel () {
         wm.hide(props.config.wmId)
       },
+      quit,
       menuItems,
       selectedComponent,
       configClone,
+      configWidget
     }
   }
 })
@@ -128,12 +144,14 @@ function menuByType (type?: string) {
       return [[SettingsItemcheck, SettingsMaps]]
     case 'price-check':
       return [[SettingsPricecheck]]
+    case 'item-search':
+      return [[SettingsItemSearch]]
     default:
       return [
         [SettingsHotkeys, SettingsChat],
         [SettingsGeneral],
         [SettingsPricecheck, SettingsMaps, SettingsItemcheck],
-        [SettingsDebug]
+        [SettingsDebug, SettingsAbout]
       ]
   }
 }
@@ -181,6 +199,66 @@ function flatJoin<T, J> (arr: T[][], joinEl: () => J) {
  }
 }
 
+.quit-btn {
+  @apply text-gray-600;
+  @apply border border-gray-800;
+  @apply p-1 mt-2 mr-2 rounded;
+
+  &:hover {
+    @apply text-red-400;
+    @apply border-red-400;
+  }
+}
+
+.patronsHorizontal {
+  @apply bg-gray-900 p-1 rounded gap-1;
+  position: absolute;
+  top: 40rem; left: 0; right: 0;
+  margin: 0 auto;
+  max-width: 50rem;
+  display: flex;
+  &:global {
+    animation-name: slideInDown;
+    animation-duration: 1s;
+  }
+}
+
+@keyframes slide {
+  0% { transform: translate(0%, 0); }
+  4% { transform: translate(0%, 0); }
+  100% { transform: translate(-99%, 0); }
+}
+.patronsLine {
+  display: inline-block;
+  animation: slide 64s linear infinite;
+}
+
+.podium {
+  display: flex;
+  position: absolute;
+  top: auto;
+  bottom: max(0px, calc((100% - 38rem) / 2 - 10rem));
+  align-items: flex-end;
+  width: 100%;
+  justify-content: center;
+  @apply gap-4 p-4;
+  &:global {
+    animation-name: fadeIn;
+    animation-duration: 1.5s;
+  }
+}
+.podium > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  min-width: min-content;
+}
+.podium > div:nth-child(1) { max-width: 18rem; }
+.podium > div:nth-child(2) { max-width: 16rem; }
+.podium > div:nth-child(3) { flex-direction: column; align-items: center; }
+.podium > div:nth-child(4) { max-width: 24rem; }
+.podium > div:nth-child(5) { max-width: 18rem; }
+
 .rating {
   min-width: 3rem;
   text-align: center;
@@ -225,10 +303,13 @@ function flatJoin<T, J> (arr: T[][], joinEl: () => J) {
     "Settings - Awakened PoE Trade": "Настройки - Awakened PoE Trade",
     "Hotkeys": "Быстрые клавиши",
     "General": "Общие",
+    "About": "О программе",
     "Price check": "Прайс-чек",
     "Maps": "Карты",
     "Item info": "Проверка предмета",
+    "Item search": "Поиск предметов",
     "Debug": "Debug",
+    "Quit": "Выход",
     "Chat": "Чат",
     "Stash search": "Поиск в тайнике",
     "Stopwatch": "Секундомер",

@@ -1,20 +1,29 @@
-import type { IpcEvent, IpcEventPayload } from '@ipc/types'
+import type { IpcEvent, IpcEventPayload, UpdateInfo, HostState } from '@ipc/types'
 import { shallowRef } from 'vue'
 import Sockette from 'sockette'
 
 class HostTransport {
   private evBus = new EventTarget()
-  private socket: Sockette
+  private socket!: Sockette
   logs = shallowRef('')
+  version = shallowRef('0.0.00000')
+  isPortable = shallowRef(false)
+  updateInfo = shallowRef<UpdateInfo>({ state: 'initial' })
 
-  constructor () {
-    this.socket = new Sockette(`ws://${window.location.host}/events`, {
-      onmessage: (e) => {
-        this.selfDispatch(JSON.parse(e.data))
-      }
-    })
+  async init () {
     this.onEvent('MAIN->CLIENT::log-entry', (entry) => {
       this.logs.value += (entry.message + '\n')
+    })
+    this.onEvent('MAIN->CLIENT::updater-state', (info) => {
+      this.updateInfo.value = info
+    })
+    await new Promise((resolve) => {
+      this.socket = new Sockette(`ws://${window.location.host}/events`, {
+        onmessage: (e) => {
+          this.selfDispatch(JSON.parse(e.data))
+        },
+        onopen: resolve
+      })
     })
   }
 
@@ -45,7 +54,11 @@ class HostTransport {
 
   async getConfig (): Promise<string | null> {
     const response = await fetch('/config')
-    const config = await response.json() as { contents: string | null }
+    const config = await response.json() as HostState
+    // TODO: 1) refactor this 2) add logs
+    this.version.value = config.version
+    this.updateInfo.value = config.updater
+    this.isPortable.value = config.portable
     return config.contents
   }
 

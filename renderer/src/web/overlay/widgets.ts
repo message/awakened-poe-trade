@@ -42,6 +42,7 @@ export interface PriceCheckWidget extends Widget {
   activateStockFilter: boolean
   showCursor: boolean
   requestPricePrediction: boolean
+  builtinBrowser: boolean
 }
 
 export interface ItemCheckWidget extends Widget {
@@ -50,6 +51,7 @@ export interface ItemCheckWidget extends Widget {
   craftOfExileKey: string | null
   stashSearchKey: string | null
   maps: {
+    profile: number
     showNewStats: boolean
     selectedStats: Array<{
       matcher: string
@@ -84,4 +86,5 @@ export interface ImageStripWidget extends Widget {
 
 export interface ItemSearchWidget extends Widget {
   anchor: Anchor
+  ocrGemsKey: string | null
 }
