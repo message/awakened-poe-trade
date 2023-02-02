@@ -4,16 +4,16 @@
       <transition-group v-if="starred.length" tag="div"
         :enter-active-class="$style.starredItemEnter"
         class="flex gap-x-1 py-1 pr-1 bg-gray-800 rounded">
-        <div v-for="item in starred" :key="item.name + item.discr"
+        <div v-for="item in starred" :key="item.name + item.discr" @click="searchValue = item.name"
           :class="$style.starredItem">
-          <item-quick-price
-            :item-img="item.icon"
-            :price="item.price"
-            currency-text
-          ></item-quick-price>
-          <div class="ml-1 truncate" style="max-width: 7rem;">{{ item.name }}</div>
-          <div v-if="item.discr"
-            class="ml-1 truncate" style="max-width: 7rem;">{{ t(item.discr) }}</div>
+            <item-quick-price
+              :item-img="item.icon"
+              :price="item.price"
+              currency-text
+            ></item-quick-price>
+            <div class="ml-1 truncate" style="max-width: 7rem;">{{ item.name }}</div>
+            <div v-if="item.discr"
+              class="ml-1 truncate" style="max-width: 7rem;">{{ t(item.discr) }}</div>
         </div>
       </transition-group>
       <ui-timeout v-if="!showSearch"
@@ -46,7 +46,14 @@
                 <div v-if="item.gem" class="flex gap-x-1">
                   <button v-for="altQuality in item.gem.altQuality" :key="altQuality"
                     @click="selectItem(item, { altQuality })"
-                    >{{ t(altQuality) }}</button>
+                    >
+                    {{ t(altQuality) }}
+                    -
+                    <span :class="{ [$style.golden]: item.gem.prices[altQuality].currency === 'div' }">{{item.gem.prices[altQuality].price}}</span>
+                    <img src="/images/chaos.png" :class="$style.currencyIcon" v-if="item.gem.prices[altQuality].currency === 'chaos'"/>
+                    <img src="/images/divine.png" :class="$style.currencyIcon" v-else-if="item.gem.prices[altQuality].currency === 'div'"/>
+                  </button>
+
                 </div>
                 <div v-else-if="item.unique" class="flex gap-x-1">
                   <button  @click="selectItem(item, { unique: true })"
@@ -74,7 +81,7 @@ import ItemQuickPrice from '@/web/ui/ItemQuickPrice.vue'
 import Widget from './Widget.vue'
 import { BaseType, ITEMS_ITERATOR, CLIENT_STRINGS as _$, ALTQ_GEM_NAMES, ITEM_BY_TRANSLATED } from '@/assets/data'
 import { AppConfig } from '@/web/Config'
-import { findPriceByQuery, autoCurrency } from '@/web/background/Prices'
+import { findPriceByQuery, autoCurrency, displayRounding } from '@/web/background/Prices'
 import { Host } from '@/web/background/IPC'
 
 interface SelectedItem {
@@ -247,13 +254,37 @@ export default defineComponent({
       typeFilter,
       results: computed(() => {
         if (typeFilter.value === 'gem') {
-          return findItems({
+          const items = findItems({
             search: searchValue.value,
             jsonIncludes: ['GEM'],
             matchFn: (item) => Boolean(
               item.namespace === 'GEM' &&
-              item.gem!.altQuality?.length)
+                item.gem!.altQuality?.length)
           })
+
+          if (Array.isArray(items)) {
+            items.map(item => {
+              let altQualityPrices = []
+              if (Array.isArray(item.gem.altQuality)) {
+                altQualityPrices = item.gem.altQuality.reduce((coll, qual) => {
+                  const price = findPriceByQuery({
+                    ns: item.namespace,
+                    name: `${qual} ${item.refName}`,
+                    variant: '1'
+                  })
+
+                  const curr = autoCurrency(price.chaos)
+                  coll[qual] = { price: displayRounding(curr.min), currency: curr.currency }
+
+                  return coll
+                }, {})
+              }
+              item.gem.prices = altQualityPrices
+              return item
+            })
+          }
+
+          return items
         } else {
           return findItems({
             search: searchValue.value,
@@ -282,7 +313,7 @@ export default defineComponent({
 
 <style lang="postcss" module>
 .itemWrapper {
-  @apply pl-1 pt-1;
+  @apply p-1;
   overflow: hidden;
 
   &:hover {
@@ -303,8 +334,25 @@ export default defineComponent({
 
 .starredItem {
   display: flex;
+  cursor: pointer;
   flex-direction: column;
   @apply rounded px-1;
+
+  &:hover {
+    background: theme('colors.gray.700')
+  }
+}
+
+.currencyIcon {
+  display: inline-block;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin: -0.4375rem;
+  margin-left: 0.125rem;
+}
+
+.golden {
+  color: #e4c29a;
 }
 
 @keyframes starredItemEnter {
