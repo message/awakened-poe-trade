@@ -47,11 +47,14 @@
                   <button v-for="altQuality in item.gem.altQuality" :key="altQuality"
                     @click="selectItem(item, { altQuality })"
                     >
-                    {{ t(altQuality) }}
-                    -
-                    <span :class="{ [$style.golden]: item.gem.prices[altQuality].currency === 'div' }">{{item.gem.prices[altQuality].price}}</span>
-                    <img src="/images/chaos.png" :class="$style.currencyIcon" v-if="item.gem.prices[altQuality].currency === 'chaos'"/>
-                    <img src="/images/divine.png" :class="$style.currencyIcon" v-else-if="item.gem.prices[altQuality].currency === 'div'"/>
+                    <span :class="{ [$style.golden]: prices[item.name][altQuality].currency === 'div' }">{{ t(altQuality) }}</span>
+
+                    <span v-if="prices[item.name][altQuality]">
+                      -
+                      <span :class="{ [$style.golden]: prices[item.name][altQuality].currency === 'div' }">{{prices[item.name][altQuality].price}}</span>
+                      <img src="/images/chaos.png" :class="$style.currencyIconGray" v-if="prices[item.name][altQuality].currency === 'chaos'"/>
+                      <img src="/images/divine.png" :class="$style.currencyIcon" v-else-if="prices[item.name][altQuality].currency === 'div'"/>
+                    </span>
                   </button>
 
                 </div>
@@ -91,6 +94,9 @@ interface SelectedItem {
   chaos?: number
   price?: ReturnType<typeof autoCurrency>
 }
+
+interface GemPrice { price: string, currency: string }
+type AltQualityGemPrice = Record<string, GemPrice>
 
 function useSelectedItems () {
   const items = ref<SelectedItem[]>([])
@@ -248,52 +254,59 @@ export default defineComponent({
       searchValue.value = ''
     }
 
+    const results = computed(() => {
+      if (typeFilter.value === 'gem') {
+        return findItems({
+          search: searchValue.value,
+          jsonIncludes: ['GEM'],
+          matchFn: (item) => Boolean(
+            item.namespace === 'GEM' &&
+              item.gem!.altQuality?.length)
+        })
+      } else {
+        return findItems({
+          search: searchValue.value,
+          jsonIncludes: ['UNIQUE', 'Replica '],
+          matchFn: (item) => Boolean(
+            item.namespace === 'UNIQUE' &&
+              item.refName.startsWith('Replica '))
+        })
+      }
+    })
+
     return {
       t,
       searchValue,
       typeFilter,
-      results: computed(() => {
-        if (typeFilter.value === 'gem') {
-          const items = findItems({
-            search: searchValue.value,
-            jsonIncludes: ['GEM'],
-            matchFn: (item) => Boolean(
-              item.namespace === 'GEM' &&
-                item.gem!.altQuality?.length)
-          })
+      results,
+      prices: computed(() => {
+        if (typeFilter.value !== 'gem' || !Array.isArray(results.value)) {
+          return {}
+        }
 
-          if (Array.isArray(items)) {
-            items.map(item => {
-              let altQualityPrices = []
-              if (Array.isArray(item.gem.altQuality)) {
-                altQualityPrices = item.gem.altQuality.reduce((coll, qual) => {
-                  const price = findPriceByQuery({
-                    ns: item.namespace,
-                    name: `${qual} ${item.refName}`,
-                    variant: '1'
-                  })
-
-                  const curr = autoCurrency(price.chaos)
-                  coll[qual] = { price: displayRounding(curr.min), currency: curr.currency }
-
-                  return coll
-                }, {})
-              }
-              item.gem.prices = altQualityPrices
-              return item
-            })
+        return results.value.reduce((resultCollection, item) => {
+          if (!item.gem || !Array.isArray(item.gem?.altQuality)) {
+            return resultCollection
           }
 
-          return items
-        } else {
-          return findItems({
-            search: searchValue.value,
-            jsonIncludes: ['UNIQUE', 'Replica '],
-            matchFn: (item) => Boolean(
-              item.namespace === 'UNIQUE' &&
-              item.refName.startsWith('Replica '))
-          })
-        }
+          resultCollection[item.name] = item.gem.altQuality.reduce((gemCollection, qual) => {
+            const price = findPriceByQuery({
+              ns: item.namespace,
+              name: `${qual} ${item.name}`,
+              variant: '1'
+            })
+
+            if (!price) {
+              gemCollection[qual] = { price: '?', currency: 'chaos' } as GemPrice
+            } else {
+              const curr = autoCurrency(price.chaos)
+              gemCollection[qual] = { price: displayRounding(curr.min), currency: curr.currency } as GemPrice
+            }
+
+            return gemCollection
+          }, {} as AltQualityGemPrice)
+          return resultCollection
+        }, {} as Record<string, AltQualityGemPrice>)
       }),
       selectItem,
       clearItems () {
@@ -349,6 +362,11 @@ export default defineComponent({
   height: 1.75rem;
   margin: -0.4375rem;
   margin-left: 0.125rem;
+}
+
+.currencyIconGray {
+  @apply currencyIcon;
+  filter: grayscale(1);
 }
 
 .golden {
