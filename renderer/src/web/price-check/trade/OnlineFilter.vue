@@ -11,8 +11,8 @@
         <div class="flex flex-col gap-y-1">
           <div class="mb-1">
             <ui-toggle
-              :modelValue="filters.trade.offline"
-              @update:modelValue="onOfflineUpdate">{{ t('Offline & Online') }}</ui-toggle>
+                :modelValue="filters.trade.offline"
+                @update:modelValue="onOfflineUpdate">{{ t('Offline & Online') }}</ui-toggle>
           </div>
           <template v-if="byTime">
             <ui-radio v-model="filters.trade.listed" :value="undefined">{{ t('Listed: Any Time') }}</ui-radio>
@@ -27,10 +27,10 @@
         <div class="flex flex-col gap-y-1">
           <div class="mb-1">
             <ui-toggle :class="{ 'invisible': filters.trade.offline }"
-              v-model="filters.trade.onlineInLeague">{{ t('In League') }}</ui-toggle>
+                       v-model="filters.trade.onlineInLeague">{{ t('In League') }}</ui-toggle>
           </div>
           <ui-radio v-for="league of tradeLeagues" :key="league.id"
-            v-model="filters.trade.league" :value="league.id">{{ league.id }}</ui-radio>
+                    v-model="filters.trade.league" :value="league.id">{{ league.id }}</ui-radio>
           <template v-if="byTime">
             <ui-radio class="mt-3" v-model="filters.trade.currency" :value="undefined">{{ t('Any Currency') }}</ui-radio>
             <ui-radio v-model="filters.trade.currency" value="chaos">{{ t('Chaos Orb') }}</ui-radio>
@@ -46,7 +46,7 @@
 import { computed, defineComponent, PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { ItemFilters } from '../filters/interfaces'
-import { selected as defaultLeague, tradeLeagues } from '../../background/Leagues'
+import { useLeagues } from '@/web/background/Leagues'
 
 export default defineComponent({
   props: {
@@ -60,12 +60,19 @@ export default defineComponent({
     }
   },
   setup (props) {
+    const leagues = useLeagues()
     const { t } = useI18n()
 
     return {
       t,
-      tradeLeagues,
-      showLeagueName: computed(() => defaultLeague.value !== props.filters.trade.league),
+      tradeLeagues: computed(() => {
+        const { isRuthless } = leagues.selected.value!
+        return leagues.list.value.filter(league => {
+          if (!isRuthless && league.isRuthless) return false
+          return true
+        })
+      }),
+      showLeagueName: computed(() => leagues.selectedId.value !== props.filters.trade.league),
       toggleOffline () {
         const { filters } = props
         filters.trade.offline = !filters.trade.offline

@@ -97,8 +97,6 @@ export interface Config {
   overlayBackground: string
   overlayBackgroundExclusive: boolean
   overlayBackgroundClose: boolean
-  itemCheckKey: string | null
-  delveGridKey: string | null
   restoreClipboard: boolean
   commands: Array<{
     text: string
@@ -120,13 +118,11 @@ export interface Config {
 }
 
 export const defaultConfig = (): Config => ({
-  configVersion: 15,
+  configVersion: 16,
   overlayKey: 'Shift + Space',
   overlayBackground: 'rgba(129, 139, 149, 0.15)',
   overlayBackgroundExclusive: true,
   overlayBackgroundClose: true,
-  itemCheckKey: null,
-  delveGridKey: null,
   restoreClipboard: false,
   showAttachNotification: true,
   commands: [{
@@ -210,28 +206,30 @@ export const defaultConfig = (): Config => ({
       wmWants: 'hide',
       wmZorder: 'exclusive',
       wmFlags: ['hide-on-blur', 'skip-menu'],
+      hotkey: null,
       wikiKey: null,
       poedbKey: null,
       craftOfExileKey: null,
       stashSearchKey: null,
       maps: {
+        profile: 1,
         showNewStats: false,
         selectedStats: [
           {
             matcher: '#% maximum Player Resistances',
-            decision: 'warning'
+            decision: 'w--'
           },
           {
             matcher: 'Monsters reflect #% of Physical Damage',
-            decision: 'danger'
+            decision: 'd--'
           },
           {
             matcher: 'Monsters reflect #% of Elemental Damage',
-            decision: 'danger'
+            decision: 'd--'
           },
           {
             matcher: 'Area contains two Unique Bosses',
-            decision: 'desirable'
+            decision: 'g--'
           }
         ]
       }
@@ -242,8 +240,9 @@ export const defaultConfig = (): Config => ({
       wmTitle: '',
       wmWants: 'hide',
       wmZorder: 4,
-      wmFlags: ['hide-on-focus', 'skip-menu']
-    },
+      wmFlags: ['hide-on-focus', 'skip-menu'],
+      toggleKey: null
+    } as widget.DelveGridWidget,
     {
       wmId: 5,
       wmType: 'settings',
@@ -392,7 +391,7 @@ function upgradeConfig (_config: Config): Config {
     mapCheck.maps = { selectedStats: mapCheck.selectedStats }
     mapCheck.selectedStats = undefined
 
-    config.itemCheckKey = (config as any).mapCheckKey || null
+    ;(config as any).itemCheckKey = (config as any).mapCheckKey || null
     ;(config as any).mapCheckKey = undefined
 
     config.configVersion = 7
@@ -518,6 +517,21 @@ function upgradeConfig (_config: Config): Config {
     config.configVersion = 15
   }
 
+  if (config.configVersion < 16) {
+    const delve = config.widgets.find(w => w.wmType === 'delve-grid') as widget.DelveGridWidget
+    delve.toggleKey = (config as any).delveGridKey
+
+    const itemCheck = config.widgets.find(w => w.wmType === 'item-check') as widget.ItemCheckWidget
+    itemCheck.hotkey = (config as any).itemCheckKey
+
+    if (itemCheck.maps.profile === undefined) {
+      itemCheck.maps.profile = 1
+      itemCheck.maps.selectedStats = []
+    }
+
+    config.configVersion = 16
+  }
+
   return config as unknown as Config
 }
 
@@ -569,15 +583,16 @@ function getConfigForHost (): HostConfig {
       action: { type: 'copy-item', target: 'search-similar' }
     })
   }
-  if (config.itemCheckKey) {
+  if (itemCheck.hotkey) {
     actions.push({
-      shortcut: config.itemCheckKey,
+      shortcut: itemCheck.hotkey,
       action: { type: 'copy-item', target: 'item-check', focusOverlay: true }
     })
   }
-  if (config.delveGridKey) {
+  const delveGrid = AppConfig('delve-grid') as widget.DelveGridWidget
+  if (delveGrid.toggleKey) {
     actions.push({
-      shortcut: config.delveGridKey,
+      shortcut: delveGrid.toggleKey,
       action: { type: 'trigger-event', target: 'delve-grid' },
       keepModKeys: true
     })
