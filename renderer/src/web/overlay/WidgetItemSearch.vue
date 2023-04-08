@@ -136,7 +136,7 @@ function findItems (opts: {
 
   const out = []
 
-  const lcLongestWord = lcSearch[0]
+  const lcLongestWord = lcSearch[0].startsWith('suppo') ? lcSearch[1] : lcSearch[0]
   const jsonSearch = (AppConfig().language !== 'cmn-Hant')
     ? lcLongestWord.slice(1) // in non-CJK first letter should be in first utf16 code unit
     : lcLongestWord
