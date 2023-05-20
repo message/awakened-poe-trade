@@ -95,7 +95,6 @@ export interface Config {
   leagueId?: string
   overlayKey: string
   overlayBackground: string
-  overlayBackgroundExclusive: boolean
   overlayBackgroundClose: boolean
   restoreClipboard: boolean
   commands: Array<{
@@ -106,14 +105,13 @@ export interface Config {
   clientLog: string | null
   gameConfig: string | null
   windowTitle: string
-  logLevel: string
+  logKeys: boolean
   accountName: string
   stashScroll: boolean
   language: 'en' | 'ru' | 'cmn-Hant'
   realm: 'pc-ggg' | 'pc-garena'
   widgets: widget.Widget[]
   fontSize: number
-  disableUpdateDownload: boolean
   showAttachNotification: boolean
 }
 
@@ -121,7 +119,6 @@ export const defaultConfig = (): Config => ({
   configVersion: 16,
   overlayKey: 'Shift + Space',
   overlayBackground: 'rgba(129, 139, 149, 0.15)',
-  overlayBackgroundExclusive: true,
   overlayBackgroundClose: true,
   restoreClipboard: false,
   showAttachNotification: true,
@@ -153,13 +150,12 @@ export const defaultConfig = (): Config => ({
   clientLog: null,
   gameConfig: null,
   windowTitle: 'Path of Exile',
-  logLevel: 'warn',
+  logKeys: false,
   accountName: '',
   stashScroll: true,
   language: 'en',
   realm: 'pc-ggg',
   fontSize: 16,
-  disableUpdateDownload: false,
   widgets: [
     // --- REQUIRED ---
     {
@@ -378,7 +374,7 @@ function upgradeConfig (_config: Config): Config {
 
   if (config.configVersion < 6) {
     config.widgets.find(w => w.wmType === 'price-check')!
-      .showRateLimitState = (config.logLevel === 'debug')
+      .showRateLimitState = ((config as any).logLevel === 'debug')
     config.widgets.find(w => w.wmType === 'price-check')!
       .apiLatencySeconds = 2
 
@@ -532,6 +528,10 @@ function upgradeConfig (_config: Config): Config {
     config.configVersion = 16
   }
 
+  if (config.logKeys === undefined) {
+    config.logKeys = false
+  }
+
   return config as unknown as Config
 }
 
@@ -657,8 +657,7 @@ function getConfigForHost (): HostConfig {
     gameConfig: config.gameConfig,
     stashScroll: config.stashScroll,
     overlayKey: config.overlayKey,
-    disableUpdateDownload: config.disableUpdateDownload,
-    logLevel: config.logLevel,
+    logKeys: config.logKeys,
     windowTitle: config.windowTitle,
     language: config.language
   }

@@ -1,7 +1,7 @@
 <template>
   <div v-if="tags.length" class="flex items-center text-xs leading-none gap-x-1">
     <span v-for="tag of tags"
-      :class="$style[tag.type]">{{ tag.count> 1 ? t('Tier {0} x {1}', [tag.tier, tag.count]) :  t('Tier {0}', [tag.tier])}}</span>
+          :class="$style[tag.type]">{{ tag.count> 1 ? t('filters.tierDouble', [tag.tier, tag.count]) :  t('filters.tier', [tag.tier])}}</span>
   </div>
 </template>
 
@@ -42,13 +42,13 @@ export default defineComponent({
         if (!tier) continue
 
         if ((
-          filter.tag === FilterTag.Explicit ||
-          filter.tag === FilterTag.Pseudo ||
-          filter.tag === FilterTag.Property
+            filter.tag === FilterTag.Explicit ||
+            filter.tag === FilterTag.Pseudo ||
+            filter.tag === FilterTag.Property
         ) && (
-          item.category !== ItemCategory.Jewel &&
-          item.category !== ItemCategory.ClusterJewel &&
-          item.category !== ItemCategory.MemoryLine
+            item.category !== ItemCategory.Jewel &&
+            item.category !== ItemCategory.ClusterJewel &&
+            item.category !== ItemCategory.MemoryLine
         )) {
           if (tier === 1) incrementTierCount(out, 'tier-1', tier)
           else if (tier === 2) incrementTierCount(out, 'tier-2', tier)
@@ -89,16 +89,3 @@ export default defineComponent({
   @apply bg-gray-700 text-black;
 }
 </style>
-
-<i18n>
-{
-  "ru": {
-    "Tier {0}": "Ур {0}",
-    "Tier {0} x {1}": "Ур {0} x {1}"
-  },
-  "cmn-Hant": {
-    "Tier {0}": "階層 {0}",
-    "Tier {0} x {1}": "階層 {0} x {1}"
-  }
-}
-</i18n>

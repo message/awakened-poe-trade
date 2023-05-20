@@ -1,7 +1,7 @@
 <template>
   <div>
     <div :class="$style.window" class="grow layout-column">
-      <app-titlebar @close="cancel" :title="t('Settings - Awakened PoE Trade')" />
+      <app-titlebar @close="cancel" :title="t('settings.title')" />
       <div class="flex grow min-h-0">
         <div class="pl-2 pt-2 bg-gray-900 flex flex-col gap-1" style="min-width: 10rem;">
           <template v-for="item of menuItems">
@@ -10,8 +10,8 @@
             <div v-else
                  class="border-b mx-2 border-gray-800" />
           </template>
-        <button v-if="menuItems.length >= 4"
-          :class="$style['quit-btn']" @click="quit">{{ t('Quit') }}</button>
+          <button v-if="menuItems.length >= 4"
+          :class="$style['quit-btn']" @click="quit">{{ t('app.quit') }}</button>
           <div class="text-gray-400 text-center mt-auto pr-3 pt-4 pb-12" style="max-width: fit-content; min-width: 100%;">
             {{ t('Support development on') }}<br> <a href="https://patreon.com/awakened_poe_trade" class="inline-flex mt-1" target="_blank"><img class="inline h-5" src="/images/Patreon.svg"></a>
           </div>
@@ -101,16 +101,16 @@ export default defineComponent({
     }, { deep: true })
 
     const menuItems = computed(() => flatJoin(
-      menuByType(configWidget.value?.wmType)
-        .map(group => group.map(component => ({
-          name: t(component.name),
-          select () {
-            selectedComponent.value = component
-          },
-          isSelected: (selectedComponent.value === component),
-          type: 'menu-item' as const
-        }))),
-      () => ({ type: 'separator' as const })
+        menuByType(configWidget.value?.wmType)
+            .map(group => group.map(component => ({
+              name: t(component.name),
+              select () {
+                selectedComponent.value = component
+              },
+              isSelected: (selectedComponent.value === component),
+              type: 'menu-item' as const
+            }))),
+        () => ({ type: 'separator' as const })
     ))
 
     return {
@@ -204,10 +204,10 @@ function flatJoin<T, J> (arr: T[][], joinEl: () => J) {
   @apply border border-gray-800;
   @apply p-1 mt-2 mr-2 rounded;
 
-  &:hover {
-    @apply text-red-400;
-    @apply border-red-400;
-  }
+&:hover {
+   @apply text-red-400;
+   @apply border-red-400;
+ }
 }
 
 .patronsHorizontal {
@@ -217,10 +217,10 @@ function flatJoin<T, J> (arr: T[][], joinEl: () => J) {
   margin: 0 auto;
   max-width: 50rem;
   display: flex;
-  &:global {
-    animation-name: slideInDown;
-    animation-duration: 1s;
-  }
+&:global {
+   animation-name: slideInDown;
+   animation-duration: 1s;
+ }
 }
 
 @keyframes slide {
@@ -242,10 +242,10 @@ function flatJoin<T, J> (arr: T[][], joinEl: () => J) {
   width: 100%;
   justify-content: center;
   @apply gap-4 p-4;
-  &:global {
-    animation-name: fadeIn;
-    animation-duration: 1.5s;
-  }
+&:global {
+   animation-name: fadeIn;
+   animation-duration: 1.5s;
+ }
 }
 .podium > div {
   display: flex;
@@ -296,24 +296,3 @@ function flatJoin<T, J> (arr: T[][], joinEl: () => J) {
   @apply text-2xl;
 }
 </style>
-
-<i18n>
-{
-  "ru": {
-    "Settings - Awakened PoE Trade": "Настройки - Awakened PoE Trade",
-    "Hotkeys": "Быстрые клавиши",
-    "General": "Общие",
-    "About": "О программе",
-    "Price check": "Прайс-чек",
-    "Maps": "Карты",
-    "Item info": "Проверка предмета",
-    "Item search": "Поиск предметов",
-    "Debug": "Debug",
-    "Quit": "Выход",
-    "Chat": "Чат",
-    "Stash search": "Поиск в тайнике",
-    "Stopwatch": "Секундомер",
-    "App development continues thanks to:": "Разработка приложения продолжается благодаря:"
-  }
-}
-</i18n>

@@ -77,7 +77,7 @@
 
 <script lang="ts">
 import { defineComponent, PropType, shallowRef, ref, computed, nextTick, inject } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { useI18nNs } from '@/web/i18n'
 import { distance } from 'fastest-levenshtein'
 import { ItemSearchWidget, WidgetManager } from './interfaces'
 import ItemQuickPrice from '@/web/ui/ItemQuickPrice.vue'
@@ -200,7 +200,7 @@ export default defineComponent({
   },
   setup (props) {
     const wm = inject<WidgetManager>('wm')!
-    const { t } = useI18n()
+    const { t } = useI18nNs('item_search')
     const { findPriceByQuery, autoCurrency } = usePoeninja()
 
     const showTimeout = shallowRef<{ reset:() => void } | null>(null)
@@ -327,7 +327,7 @@ export default defineComponent({
 
 <style lang="postcss" module>
 .itemWrapper {
-  @apply p-1;
+  @apply pl-1 pt-1;
   overflow: hidden;
 
 &:hover {
@@ -383,21 +383,3 @@ button {
   animation: starredItemEnter 0.8s linear;
 }
 </style>
-
-<i18n>
-{
-  "en": {
-    "too_many": "Too many items found, enter the name more precisely.",
-    "not_found": "No items found."
-  },
-  "ru": {
-    "Search by name…": "Искать по имени…",
-    "Reset items": "Сбросить предметы",
-    "Heist target:": "Цель Кражи:",
-    "Skill Gem": "Камни умений",
-    "too_many": "Найдено слишком много предметов, уточните название.",
-    "not_found": "Не найдено ни одного предмета.",
-    "Replicas": "Копии"
-  }
-}
-</i18n>
