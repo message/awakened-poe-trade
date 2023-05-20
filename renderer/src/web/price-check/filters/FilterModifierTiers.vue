@@ -1,7 +1,7 @@
 <template>
   <div v-if="tags.length" class="flex items-center text-xs leading-none gap-x-1">
     <span v-for="tag of tags"
-          :class="$style[tag.type]">{{ tag.count> 1 ? t('filters.tierDouble', [tag.tier, tag.count]) :  t('filters.tier', [tag.tier])}}</span>
+          :class="$style[tag.type]">{{ tag.count> 1 ? t('filters.tier_double', [tag.tier, tag.count]) :  t('filters.tier', [tag.tier])}}</span>
   </div>
 </template>
 

@@ -44,7 +44,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, PropType } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { useI18nNs } from '@/web/i18n'
 import type { ItemFilters } from '../filters/interfaces'
 import { useLeagues } from '@/web/background/Leagues'
 
@@ -61,7 +61,7 @@ export default defineComponent({
   },
   setup (props) {
     const leagues = useLeagues()
-    const { t } = useI18n()
+    const { t } = useI18nNs('online_filter')
 
     return {
       t,
