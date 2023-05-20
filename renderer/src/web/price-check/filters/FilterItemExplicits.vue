@@ -70,7 +70,6 @@ export default defineComponent({
           const isPrefix = mod.info.generation === 'prefix'
           const isSuffix = mod.info.generation === 'suffix'
           if (isPrefix || isSuffix) {
-            console.log(viewMod)
             const tier = viewMod.rank !== undefined ? viewMod.rank === 0 ? 1 : viewMod.rank : viewMod.tier !== undefined ? viewMod.tier : 13
             collection.itemCount = collection.itemCount + 1
             collection.totalScore = collection.totalScore + tier
