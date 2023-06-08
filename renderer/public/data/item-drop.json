@@ -297,16 +297,16 @@
   },
   {
     "query": [
-      "ITEM::Abrasive Catalyst",
-      "ITEM::Fertile Catalyst",
       "ITEM::Imbued Catalyst",
-      "ITEM::Intrinsic Catalyst",
-      "ITEM::Prismatic Catalyst",
-      "ITEM::Tempering Catalyst",
+      "ITEM::Abrasive Catalyst",
       "ITEM::Turbulent Catalyst",
-      "ITEM::Unstable Catalyst",
+      "ITEM::Noxious Catalyst",
+      "ITEM::Intrinsic Catalyst",
+      "ITEM::Tempering Catalyst",
       "ITEM::Accelerating Catalyst",
-      "ITEM::Noxious Catalyst"
+      "ITEM::Fertile Catalyst",
+      "ITEM::Unstable Catalyst",
+      "ITEM::Prismatic Catalyst"
     ],
     "items": []
   },
