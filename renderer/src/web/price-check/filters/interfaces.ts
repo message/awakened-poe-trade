@@ -71,7 +71,6 @@ export interface ItemFilters {
     listed: string | undefined
     currency: string | undefined
     league: string
-    chaosPriceThreshold: number
     collapseListings: 'api' | 'app'
   }
 }
