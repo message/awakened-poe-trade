@@ -103,7 +103,7 @@ function useSelectedItems () {
 
   function addItem (newItem: SelectedItem) {
     if (items.value.some(item =>
-        item.name === newItem.name &&
+      item.name === newItem.name &&
         item.discr === newItem.discr
     )) return false
 
@@ -138,8 +138,8 @@ function findItems (opts: {
 
   const lcLongestWord = lcSearch[0].startsWith('suppo') ? lcSearch[1] : lcSearch[0]
   const jsonSearch = (AppConfig().language !== 'cmn-Hant')
-      ? lcLongestWord.slice(1) // in non-CJK first letter should be in first utf16 code unit
-      : lcLongestWord
+    ? lcLongestWord.slice(1) // in non-CJK first letter should be in first utf16 code unit
+    : lcLongestWord
 
   const MAX_HITS = 70 // NOTE: based on first word only, so don't be too strict
   const MAX_RESULTS_VISIBLE = 5 // NOTE: don't want to pick from too many results
@@ -149,7 +149,7 @@ function findItems (opts: {
     hits += 1
     const lcName = match.name.toLowerCase()
     if (
-        opts.matchFn(match) &&
+      opts.matchFn(match) &&
         lcSearch.every(part => lcName.includes(part)) &&
         ((AppConfig().language === 'cmn-Hant') || lcName.split(/\s+/).some(part => part.startsWith(lcLongestWord)))
     ) {
@@ -261,7 +261,7 @@ export default defineComponent({
           search: searchValue.value,
           jsonIncludes: ['GEM'],
           matchFn: (item) => Boolean(
-              item.namespace === 'GEM' &&
+            item.namespace === 'GEM' &&
               item.gem!.altQuality?.length)
         })
       } else {
@@ -269,7 +269,7 @@ export default defineComponent({
           search: searchValue.value,
           jsonIncludes: ['UNIQUE', 'Replica '],
           matchFn: (item) => Boolean(
-              item.namespace === 'UNIQUE' &&
+            item.namespace === 'UNIQUE' &&
               item.refName.startsWith('Replica '))
         })
       }

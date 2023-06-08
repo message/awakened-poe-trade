@@ -42,11 +42,11 @@ export default defineComponent({
         if (!tier) continue
 
         if ((
-            filter.tag === FilterTag.Explicit ||
+          filter.tag === FilterTag.Explicit ||
             filter.tag === FilterTag.Pseudo ||
             filter.tag === FilterTag.Property
         ) && (
-            item.category !== ItemCategory.Jewel &&
+          item.category !== ItemCategory.Jewel &&
             item.category !== ItemCategory.ClusterJewel &&
             item.category !== ItemCategory.MemoryLine
         )) {
