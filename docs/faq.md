@@ -7,10 +7,10 @@ title: FAQ
   Open Path of Exile and press overlay key `Shift + Space`. Click on the button with cog icon there.
   ![](https://i.imgur.com/81L9Cp0.png)
 
-- **Where can I find log file?**
+- **Where can I find the logs?**
 
-  Find app icon in the tray.
-  ![](https://i.imgur.com/zhi2iBH.png)
+  In the settings under the "Debug" tab.
+  ![](https://i.imgur.com/0VPm9Cz.png)
 
 - **Is this app approved by GGG? Can I get banned for using it?**
 
@@ -53,8 +53,18 @@ title: FAQ
   app works based on text of item in clipboard.
 
   Regarding Divination Card stash tab, you can use another 3rd-party apps that
-  price check your stash tabs (e.g. [Exilence Next](https://github.com/viktorgullmark/exilence-next/#readme))
+  price check your stash tabs (e.g. [poestack](https://poestack.com/))
 
 - **What does the orange/red circle (next to the item's listed time) mean?**
 
   It shows player's status: AFK/Offline respectively.
+
+- **What does question mark (next to the item's price) mean?**
+
+  It's shown when item is priced using stash tab name instead of being individually priced.
+
+  The intention here is to make you aware that price is likely not real and is only so high because the item has been thrown in dump tab.
+
+- **How do I disable auto-updates?**
+
+  This is possible by using the [command line flag](/cmd-flags).

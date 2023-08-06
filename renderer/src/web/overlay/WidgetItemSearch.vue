@@ -201,7 +201,7 @@ export default defineComponent({
   setup (props) {
     const wm = inject<WidgetManager>('wm')!
     const { t } = useI18nNs('item_search')
-    const { findPriceByQuery, autoCurrency } = usePoeninja()
+    const { findPriceByQuery, autoCurrency, queuePricesFetch } = usePoeninja()
 
     const showTimeout = shallowRef<{ reset:() => void } | null>(null)
 
@@ -227,6 +227,8 @@ export default defineComponent({
     })
 
     function selectItem (item: BaseType, opts: { altQuality?: string, unique?: true, withTimeout?: true }) {
+      queuePricesFetch()
+
       let price: ReturnType<typeof findPriceByQuery>
       if (opts.altQuality) {
         price = findPriceByQuery({
