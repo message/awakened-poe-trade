@@ -337,6 +337,16 @@
     "items": []
   },
   {
+	"query": [
+	  "ITEM::Unrelenting Timeless Eternal Emblem",
+	  "ITEM::Unrelenting Timeless Karui Emblem",
+	  "ITEM::Unrelenting Timeless Maraketh Emblem",
+	  "ITEM::Unrelenting Timeless Templar Emblem",
+	  "ITEM::Unrelenting Timeless Vaal Emblem"
+	],
+	"items": []
+  },
+  {
     "query": [
       "ITEM::Prime Chaotic Resonator",
       "ITEM::Powerful Chaotic Resonator",
