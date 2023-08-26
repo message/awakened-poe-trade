@@ -154,10 +154,3 @@ export default defineComponent({
   color: #A29162
 }
 </style>
-
-<i18n>
-{
-  "ru": {
-  }
-}
-</i18n>

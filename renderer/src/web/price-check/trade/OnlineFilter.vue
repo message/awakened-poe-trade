@@ -3,7 +3,7 @@
     <template #target>
       <button class="rounded mr-1 px-2 truncate" :class="showWarning() ? 'text-orange-500' : 'text-gray-500'" @click="toggleOffline">
         <span><i class="fas fa-history"></i> {{ t(filters.trade.offline ? 'Offline' : 'Online') }}</span>
-        <span v-if="showLeagueName">, {{ filters.trade.league }}</span>
+        <span v-if="showLeagueName()">, {{ filters.trade.league }}</span>
       </button>
     </template>
     <template #content>

@@ -1,7 +1,7 @@
 <template>
   <div>
     <div :class="$style.window" class="grow layout-column">
-      <app-titlebar @close="cancel" :title="t('settings.title')" />
+      <AppTitleBar @close="cancel" :title="t('settings.title')" />
       <div class="flex grow min-h-0">
         <div class="pl-2 pt-2 bg-gray-900 flex flex-col gap-1" style="min-width: 10rem;">
           <template v-for="item of menuItems">
@@ -11,7 +11,7 @@
                  class="border-b mx-2 border-gray-800" />
           </template>
           <button v-if="menuItems.length >= 4"
-          :class="$style['quit-btn']" @click="quit">{{ t('app.quit') }}</button>
+                  :class="$style['quit-btn']" @click="quit">{{ t('app.quit') }}</button>
           <div class="text-gray-400 text-center mt-auto pr-3 pt-4 pb-12" style="max-width: fit-content; min-width: 100%;">
             {{ t('Support development on') }}<br> <a href="https://patreon.com/awakened_poe_trade" class="inline-flex mt-1" target="_blank"><img class="inline h-5" src="/images/Patreon.svg"></a>
           </div>
@@ -101,16 +101,16 @@ export default defineComponent({
     }, { deep: true })
 
     const menuItems = computed(() => flatJoin(
-      menuByType(configWidget.value?.wmType)
-        .map(group => group.map(component => ({
-          name: t(component.name),
-          select () {
-            selectedComponent.value = component
-          },
-          isSelected: (selectedComponent.value === component),
-          type: 'menu-item' as const
-        }))),
-      () => ({ type: 'separator' as const })
+        menuByType(configWidget.value?.wmType)
+            .map(group => group.map(component => ({
+              name: t(component.name),
+              select () {
+                selectedComponent.value = component
+              },
+              isSelected: (selectedComponent.value === component),
+              type: 'menu-item' as const
+            }))),
+        () => ({ type: 'separator' as const })
     ))
 
     return {
@@ -176,10 +176,10 @@ function flatJoin<T, J> (arr: T[][], joinEl: () => J) {
   overflow: hidden;
   @apply bg-gray-800;
   @apply rounded-b;
-&:global {
-   animation-name: slideInDown;
-   animation-duration: 1s;
- }
+  &:global {
+    animation-name: slideInDown;
+    animation-duration: 1s;
+  }
 }
 
 .menu-item {
@@ -189,14 +189,14 @@ function flatJoin<T, J> (arr: T[][], joinEl: () => J) {
   @apply text-gray-600;
   @apply rounded-l;
 
-&:hover {
-   @apply text-gray-100;
- }
+  &:hover {
+    @apply text-gray-100;
+  }
 
-&.active {
-   @apply text-gray-400;
-   @apply bg-gray-800;
- }
+  &.active {
+    @apply text-gray-400;
+    @apply bg-gray-800;
+  }
 }
 
 .quit-btn {
@@ -204,10 +204,10 @@ function flatJoin<T, J> (arr: T[][], joinEl: () => J) {
   @apply border border-gray-800;
   @apply p-1 mt-2 mr-2 rounded;
 
-&:hover {
-   @apply text-red-400;
-   @apply border-red-400;
- }
+  &:hover {
+    @apply text-red-400;
+    @apply border-red-400;
+  }
 }
 
 .patronsHorizontal {
@@ -217,10 +217,10 @@ function flatJoin<T, J> (arr: T[][], joinEl: () => J) {
   margin: 0 auto;
   max-width: 50rem;
   display: flex;
-&:global {
-   animation-name: slideInDown;
-   animation-duration: 1s;
- }
+  &:global {
+    animation-name: slideInDown;
+    animation-duration: 1s;
+  }
 }
 
 @keyframes slide {
@@ -232,32 +232,6 @@ function flatJoin<T, J> (arr: T[][], joinEl: () => J) {
   display: inline-block;
   animation: slide 64s linear infinite;
 }
-
-.podium {
-  display: flex;
-  position: absolute;
-  top: auto;
-  bottom: max(0px, calc((100% - 38rem) / 2 - 10rem));
-  align-items: flex-end;
-  width: 100%;
-  justify-content: center;
-  @apply gap-4 p-4;
-&:global {
-   animation-name: fadeIn;
-   animation-duration: 1.5s;
- }
-}
-.podium > div {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  min-width: min-content;
-}
-.podium > div:nth-child(1) { max-width: 18rem; }
-.podium > div:nth-child(2) { max-width: 16rem; }
-.podium > div:nth-child(3) { flex-direction: column; align-items: center; }
-.podium > div:nth-child(4) { max-width: 24rem; }
-.podium > div:nth-child(5) { max-width: 18rem; }
 
 .rating {
   min-width: 3rem;
