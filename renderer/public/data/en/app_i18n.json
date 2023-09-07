@@ -130,7 +130,8 @@
 	"heistequipment_heistreward": "Heist Brooch",
 	"heistequipment_heistweapon": "Heist Gear",
 	"heistequipment_heistutility": "Heist Cloak",
-	"accessory_trinket": "Trinket"
+    "accessory_trinket": "Trinket",
+    "sanctum_relic": "Sanctum Relic"
   },
   "filters": {
 	"selected_some": "{0} of {1}, stats",
@@ -156,13 +157,13 @@
 	"tag_fractured": "fractured",
 	"tag_crafted": "crafted",
 	"tag_scourge": "scourge",
-    "tag_enchant": "enchant",
+	"tag_enchant": "enchant",
 	"tag_variant": "variant",
 	"tag_corrupted": "corrupted",
 	"tag_synthesised": "synthesised",
 	"tag_eldritch": "eldritch",
 	"tag_pseudo": "pseudo",
-    "tag_explicit": "explicit",
+	"tag_explicit": "explicit",
 	"tag_explicit_shaper": "Shaper",
 	"tag_explicit_elder": "Elder",
 	"tag_explicit_crusader": "Crusader",

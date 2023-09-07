@@ -4,7 +4,7 @@
       <transition-group v-if="starred.length" tag="div"
                         :enter-active-class="$style.starredItemEnter"
                         class="flex gap-x-1 py-1 pr-1 bg-gray-800 rounded">
-        <div v-for="item in starred" :key="item.name + item.discr" @click="searchValue = item.name"
+        <div v-for="item in starred" :key="item.name + item.discr"
              :class="$style.starredItem">
           <ItemQuickPrice
               :item-img="item.icon"
@@ -13,8 +13,7 @@
           ></ItemQuickPrice>
           <div class="ml-1 truncate" style="max-width: 7rem;">{{ item.name }}</div>
           <div v-if="item.discr"
-               class="ml-1 truncate" style="max-width: 7rem;">{{ t(item.discr) }}
-          </div>
+               class="ml-1 truncate" style="max-width: 7rem;">{{ t(item.discr) }}</div>
         </div>
       </transition-group>
       <ui-timeout v-if="!showSearch"
@@ -25,21 +24,15 @@
         <div class="flex gap-x-1 p-1">
           <input type="text" :placeholder="t(':input')" class="rounded bg-gray-900 px-1 flex-1"
                  v-model="searchValue">
-          <button @click="clearSelectedItems" class="btn">
-            <i class="fas fa-times" />
-            {{ t(':reset') }}
-          </button>
+          <button @click="clearSelectedItems" class="btn"><i class="fas fa-times" /> {{ t(':reset') }}</button>
         </div>
         <div class="flex gap-x-2 px-2 mb-px1 py-1">
           <span>{{ t(':heist_target') }}</span>
           <div class="flex gap-x-1">
             <button :class="{ 'border': (typeFilter === 'gem') }" class="rounded px-2 bg-gray-900"
-                    @click="typeFilter = 'gem'">{{ t(':target_gem') }}
-            </button>
+                    @click="typeFilter = 'gem'">{{ t(':target_gem') }}</button>
             <button :class="{ 'border': (typeFilter === 'replica') }" class="rounded px-2 bg-gray-900"
-                    @click="typeFilter = 'replica'">{{ t(':target_replica') }},
-              <span class="line-through text-gray-600">Base items</span>
-            </button>
+                    @click="typeFilter = 'replica'">{{ t(':target_replica') }}, <span class="line-through text-gray-600">Base items</span></button>
           </div>
         </div>
         <div class="flex flex-col">
@@ -53,36 +46,19 @@
                 <div v-if="item.gem" class="flex gap-x-1">
                   <button v-for="altQuality in item.gem.altQuality" :key="altQuality"
                           @click="selectItem(item, { altQuality })"
-                  >
-                    <span :class="{ [$style.golden]: prices[item.name][altQuality].currency === 'div' }">{{ t(altQuality) }}</span>
-
-                    <span v-if="prices[item.name][altQuality]">
-                      -
-                      <span :class="{ [$style.golden]: prices[item.name][altQuality].currency === 'div' }">{{ prices[item.name][altQuality].price }}</span>
-                      <img src="/images/chaos.png" :class="$style.currencyIconGray" v-if="prices[item.name][altQuality].currency === 'chaos'" />
-                      <img src="/images/divine.png" :class="$style.currencyIcon" v-else-if="prices[item.name][altQuality].currency === 'div'" />
-                    </span>
-                  </button>
-
+                  >{{ t(altQuality) }}</button>
                 </div>
                 <div v-else-if="item.unique" class="flex gap-x-1">
-                  <button @click="selectItem(item, { unique: true })"
-                  >{{ t('Select') }}
-                  </button>
+                  <button  @click="selectItem(item, { unique: true })"
+                  >{{ t('Select') }}</button>
                 </div>
               </div>
             </div>
           </div>
           <div v-if="results === false"
-               class="text-center p-8 max-w-xs">
-            <i class="fas fa-search" />
-            {{ t(':too_many') }}
-          </div>
+               class="text-center p-8 max-w-xs"><i class="fas fa-search" /> {{ t(':too_many') }}</div>
           <div v-else-if="!results.length"
-               class="text-center p-8 max-w-xs">
-            <i class="fas fa-exclamation-triangle" />
-            {{ t(':not_found') }}
-          </div>
+               class="text-center p-8 max-w-xs"><i class="fas fa-exclamation-triangle" /> {{ t(':not_found') }}</div>
         </div>
       </div>
     </div>
@@ -92,7 +68,7 @@
 <script lang="ts">
 import { ref } from 'vue'
 import { distance } from 'fastest-levenshtein'
-import { BaseType, ITEMS_ITERATOR, CLIENT_STRINGS as _$, ALTQ_GEM_NAMES } from '@/assets/data'
+import { BaseType, ITEM_BY_TRANSLATED, CLIENT_STRINGS as _$, ALTQ_GEM_NAMES, REPLICA_UNIQUE_NAMES } from '@/assets/data'
 import { AppConfig } from '@/web/Config'
 import { CurrencyValue } from '@/web/background/Prices'
 
@@ -104,19 +80,12 @@ interface SelectedItem {
   price?: CurrencyValue
 }
 
-interface GemPrice {
-  price: string,
-  currency: string
-}
-
-type AltQualityGemPrice = Record<string, GemPrice>
-
 function useSelectedItems () {
   const items = ref<SelectedItem[]>([])
 
   function addItem (newItem: SelectedItem) {
     if (items.value.some(item =>
-      item.name === newItem.name &&
+        item.name === newItem.name &&
         item.discr === newItem.discr
     )) return false
 
@@ -140,38 +109,28 @@ function useSelectedItems () {
 
 function findItems (opts: {
   search: string
-  jsonIncludes: string[]
-  matchFn: (item: BaseType) => boolean
+  namespace: 'GEM' | 'UNIQUE'
+  itemNames: () => Generator<string>
 }): BaseType[] | false {
   const search = opts.search.trim()
   const lcSearch = search.toLowerCase().split(/\s+/).sort((a, b) => b.length - a.length)
+  const lcLongestWord = lcSearch[0]
   if (search.length < 3) return false
 
+  const MAX_RESULTS = 5 // NOTE: don't want to pick from too many results
   const out = []
-
-  const lcLongestWord = lcSearch[0].startsWith('suppo') ? lcSearch[1] : lcSearch[0]
-  const jsonSearch = (AppConfig().language !== 'cmn-Hant')
-    ? lcLongestWord.slice(1) // in non-CJK first letter should be in first utf16 code unit
-    : lcLongestWord
-
-  const MAX_HITS = 70 // NOTE: based on first word only, so don't be too strict
-  const MAX_RESULTS_VISIBLE = 5 // NOTE: don't want to pick from too many results
-  const MAX_RESULTS = 10
-  let hits = 0
-  for (const match of ITEMS_ITERATOR(jsonSearch, opts.jsonIncludes)) {
-    hits += 1
-    const lcName = match.name.toLowerCase()
+  for (const itemName of opts.itemNames()) {
+    const lcName = itemName.toLowerCase()
     if (
-      opts.matchFn(match) &&
         lcSearch.every(part => lcName.includes(part)) &&
         ((AppConfig().language === 'cmn-Hant') || lcName.split(/\s+/).some(part => part.startsWith(lcLongestWord)))
     ) {
-      out.push(match)
+      const match = ITEM_BY_TRANSLATED(opts.namespace, itemName)
+      out.push(...match ?? [])
       if (out.length > MAX_RESULTS) return false
     }
-    if (hits >= MAX_HITS) return false
   }
-  return out.slice(0, MAX_RESULTS_VISIBLE)
+  return out
 }
 
 function fuzzyFindHeistGem (badStr: string) {
@@ -208,8 +167,7 @@ function fuzzyFindHeistGem (badStr: string) {
 import { shallowRef, computed, nextTick, inject } from 'vue'
 import { useI18nNs } from '@/web/i18n'
 import { ItemSearchWidget, WidgetManager } from './interfaces'
-import { ITEM_BY_TRANSLATED } from '@/assets/data'
-import { usePoeninja, displayRounding } from '@/web/background/Prices'
+import { usePoeninja } from '@/web/background/Prices'
 import { Host } from '@/web/background/IPC'
 
 import ItemQuickPrice from '@/web/ui/ItemQuickPrice.vue'
@@ -223,7 +181,7 @@ const wm = inject<WidgetManager>('wm')!
 const { t } = useI18nNs('item_search')
 const { findPriceByQuery, autoCurrency, queuePricesFetch } = usePoeninja()
 
-const showTimeout = shallowRef<{ reset: () => void } | null>(null)
+const showTimeout = shallowRef<{ reset:() => void } | null>(null)
 
 nextTick(() => {
   props.config.wmFlags = ['invisible-on-blur']
@@ -281,18 +239,14 @@ const results = computed(() => {
   if (typeFilter.value === 'gem') {
     return findItems({
       search: searchValue.value,
-      jsonIncludes: ['GEM'],
-      matchFn: (item) => Boolean(
-        item.namespace === 'GEM' &&
-          item.gem!.altQuality?.length)
+      namespace: 'GEM',
+      itemNames: ALTQ_GEM_NAMES
     })
   } else {
     return findItems({
       search: searchValue.value,
-      jsonIncludes: ['UNIQUE', 'Replica '],
-      matchFn: (item) => Boolean(
-        item.namespace === 'UNIQUE' &&
-          item.refName.startsWith('Replica '))
+      namespace: 'UNIQUE',
+      itemNames: REPLICA_UNIQUE_NAMES
     })
   }
 })
@@ -307,36 +261,6 @@ const showSearch = wm.active
 function makeInvisible () {
   props.config.wmFlags = ['invisible-on-blur']
 }
-
-const prices = computed(() => {
-  if (typeFilter.value !== 'gem' || !Array.isArray(results.value)) {
-    return {}
-  }
-
-  return results.value.reduce((resultCollection, item) => {
-    if (!item.gem || !Array.isArray(item.gem?.altQuality)) {
-      return resultCollection
-    }
-
-    resultCollection[item.name] = item.gem.altQuality.reduce((gemCollection, qual) => {
-      const price = findPriceByQuery({
-        ns: item.namespace,
-        name: `${qual} ${item.name}`,
-        variant: '1'
-      })
-
-      if (!price) {
-        gemCollection[qual] = { price: '?', currency: 'chaos' } as GemPrice
-      } else {
-        const curr = autoCurrency(price.chaos)
-        gemCollection[qual] = { price: displayRounding(curr.min), currency: curr.currency } as GemPrice
-      }
-
-      return gemCollection
-    }, {} as AltQualityGemPrice)
-    return resultCollection
-  }, {} as Record<string, AltQualityGemPrice>)
-})
 </script>
 
 <style lang="postcss" module>
@@ -362,44 +286,15 @@ const prices = computed(() => {
 
 .starredItem {
   display: flex;
-  cursor: pointer;
   flex-direction: column;
   @apply rounded px-1;
-
-  &:hover {
-    background: theme('colors.gray.700')
-  }
-}
-
-.currencyIcon {
-  display: inline-block;
-  width: 1.75rem;
-  height: 1.75rem;
-  margin: -0.4375rem;
-  margin-left: 0.125rem;
-}
-
-.currencyIconGray {
-  @apply currencyIcon;
-  filter: grayscale(1);
-}
-
-.golden {
-  color: #E4C29A;
 }
 
 @keyframes starredItemEnter {
-  0% {
-    @apply bg-transparent;
-  }
-  50% {
-    @apply bg-gray-700;
-  }
-  100% {
-    @apply bg-transparent;
-  }
+  0% { @apply bg-transparent; }
+  50% { @apply bg-gray-700; }
+  100% { @apply bg-transparent; }
 }
-
 .starredItemEnter {
   animation: starredItemEnter 0.8s linear;
 }
