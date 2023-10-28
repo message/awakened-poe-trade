@@ -1,7 +1,6 @@
 {
   "please_wait": "Please wait\u2026",
   "choose_file": "Choose File",
-  "browse": "Browse",
   "app_is_ready": "Is ready and running in background",
   "reopen_settings": "Press {0} to continue editing.",
   "seconds": "seconds",
@@ -130,8 +129,8 @@
 	"heistequipment_heistreward": "Heist Brooch",
 	"heistequipment_heistweapon": "Heist Gear",
 	"heistequipment_heistutility": "Heist Cloak",
-    "accessory_trinket": "Trinket",
-    "sanctum_relic": "Sanctum Relic"
+	"accessory_trinket": "Trinket",
+	"sanctum_relic": "Sanctum Relic"
   },
   "filters": {
 	"selected_some": "{0} of {1}, stats",
@@ -186,7 +185,8 @@
 	"listed_2months": "2 Months Ago",
 	"currency_any": "Any Currency",
 	"currency_only_chaos": "Chaos Orb",
-	"currency_only_div": "Divine Orb"
+	"currency_only_div": "Divine Orb",
+	"currency_chaos_div": "Both Orbs"
   },
   "widget": {
 	"title": "widget title",
