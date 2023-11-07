@@ -68,6 +68,7 @@ export function createPresets (
     item.isFractured ||
     item.influences.length ||
     item.category === ItemCategory.ClusterJewel ||
+    item.statsByType.filter(stat => stat.type === ModifierType.Enchant).length > 0 ||
     (item.category === ItemCategory.Jewel && item.rarity === ItemRarity.Magic) ||
     (item.category !== ItemCategory.Jewel &&
       item.category !== ItemCategory.AbyssJewel &&
