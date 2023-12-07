@@ -85,7 +85,7 @@ function useSelectedItems () {
 
   function addItem (newItem: SelectedItem) {
     if (items.value.some(item =>
-        item.info.name === newItem.info.name &&
+      item.info.name === newItem.info.name &&
         item.discr === newItem.discr
     )) return false
 
@@ -122,7 +122,7 @@ function findItems (opts: {
   for (const itemName of opts.itemNames()) {
     const lcName = itemName.toLowerCase()
     if (
-        lcSearch.every(part => lcName.includes(part)) &&
+      lcSearch.every(part => lcName.includes(part)) &&
         ((AppConfig().language === 'cmn-Hant') || lcName.split(/\s+/).some(part => part.startsWith(lcLongestWord)))
     ) {
       const match = ITEM_BY_TRANSLATED(opts.namespace, itemName)
@@ -265,16 +265,16 @@ function makeInvisible () {
 
 function starredItemClick (e: MouseEvent, item: SelectedItem) {
   const parsed = (item.info.namespace === 'GEM')
-      ? createVirtualItem({
-        category: ItemCategory.Gem,
-        info: item.info,
-        gemAltQuality: item.discr as ParsedItem['gemAltQuality'],
-        gemLevel: 1
-      })
-      : createVirtualItem({
-        rarity: ItemRarity.Unique,
-        info: item.info
-      })
+    ? createVirtualItem({
+      category: ItemCategory.Gem,
+      info: item.info,
+      gemAltQuality: item.discr as ParsedItem['gemAltQuality'],
+      gemLevel: 1
+    })
+    : createVirtualItem({
+      rarity: ItemRarity.Unique,
+      info: item.info
+    })
 
   Host.selfDispatch({
     name: 'MAIN->CLIENT::item-text',

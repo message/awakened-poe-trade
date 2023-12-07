@@ -101,16 +101,16 @@ export default defineComponent({
     }, { deep: true })
 
     const menuItems = computed(() => flatJoin(
-        menuByType(configWidget.value?.wmType)
-            .map(group => group.map(component => ({
-              name: t(component.name),
-              select () {
-                selectedComponent.value = component
-              },
-              isSelected: (selectedComponent.value === component),
-              type: 'menu-item' as const
-            }))),
-        () => ({ type: 'separator' as const })
+      menuByType(configWidget.value?.wmType)
+        .map(group => group.map(component => ({
+          name: t(component.name),
+          select () {
+            selectedComponent.value = component
+          },
+          isSelected: (selectedComponent.value === component),
+          type: 'menu-item' as const
+        }))),
+      () => ({ type: 'separator' as const })
     ))
 
     return {

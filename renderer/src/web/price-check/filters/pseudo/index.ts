@@ -334,7 +334,7 @@ export function filterPseudo (ctx: FiltersCreationContext) {
     const filter = calculatedStatToFilter({
       stat: STAT_BY_REF(rule.pseudo)!,
       type: ModifierType.Pseudo,
-      sources: sources
+      sources
     }, ctx.searchInRange, ctx.item)
 
     filter.disabled = rule.disabled ?? true
