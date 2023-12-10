@@ -154,18 +154,6 @@ export function createFilters (
         disabled: false
       }
     }
-  } else if (
-    item.category === ItemCategory.ClusterJewel &&
-        item.rarity !== ItemRarity.Unique
-  ) {
-    filters.searchExact = {
-      baseType: item.info.name,
-      baseTypeTrade: t(opts, item.info)
-    }
-    filters.searchRelaxed = {
-      category: item.category,
-      disabled: true
-    }
   } else if (item.rarity === ItemRarity.Unique && item.info.unique) {
     filters.searchExact = {
       name: item.info.name,
@@ -181,7 +169,11 @@ export function createFilters (
       let disabled = opts.exact
       if (item.category === ItemCategory.ClusterJewel) {
         disabled = true
-      } else if (item.category === ItemCategory.SanctumRelic) {
+      } else if (
+        item.category === ItemCategory.SanctumRelic ||
+                item.category === ItemCategory.Charm ||
+                item.category === ItemCategory.Tincture
+      ) {
         disabled = false
       }
       filters.searchRelaxed = {
@@ -265,7 +257,9 @@ export function createFilters (
             item.category !== ItemCategory.HeistBlueprint &&
             item.category !== ItemCategory.HeistContract &&
             item.category !== ItemCategory.MemoryLine &&
-      item.category !== ItemCategory.SanctumRelic &&
+            item.category !== ItemCategory.SanctumRelic &&
+            item.category !== ItemCategory.Tincture &&
+            item.category !== ItemCategory.Charm &&
             item.info.refName !== 'Expedition Logbook'
     ) {
       if (item.category === ItemCategory.ClusterJewel) {
@@ -339,17 +333,19 @@ function createGemFilters (
   filters: ItemFilters,
   opts: CreateOptions
 ) {
-  filters.searchExact = {
-    baseType: item.info.name,
-    baseTypeTrade: t(opts, item.info)
-  }
-
-  if (item.info.gem!.vaal) {
+  if (!item.info.gem!.transfigured) {
+    filters.searchExact = {
+      baseType: item.info.name,
+      baseTypeTrade: t(opts, item.info)
+    }
+  } else {
     const normalGem = ITEM_BY_REF('GEM', item.info.gem!.normalVariant!)![0]
-    filters.searchRelaxed = {
-      baseType: normalGem.name,
-      baseTypeTrade: t(opts, normalGem),
-      disabled: true
+    filters.searchExact = {
+      baseType: item.info.name,
+      baseTypeTrade: t(opts, normalGem)
+    }
+    filters.discriminator = {
+      trade: item.info.tradeDisc!
     }
   }
 
@@ -373,18 +369,13 @@ function createGemFilters (
     return filters
   }
 
-  filters.altQuality = {
-    value: item.gemAltQuality!,
-    disabled: false
-  }
-
   if (SPECIAL_SUPPORT_GEM.includes(item.info.refName)) {
     filters.gemLevel = {
       value: item.gemLevel!,
       disabled: (item.gemLevel! < 3)
     }
 
-    if (item.gemAltQuality !== 'Superior' && item.isCorrupted && item.quality) {
+    if (item.isCorrupted && item.quality) {
       filters.quality = {
         value: item.quality,
         disabled: true

@@ -2,45 +2,41 @@
   <div>
     <div class="flex flex-wrap items-center pb-3 gap-2">
       <filter-btn-numeric v-if="filters.linkedSockets"
-        :filter="filters.linkedSockets" :name="t('item.linked_sockets')" />
+                          :filter="filters.linkedSockets" :name="t('item.linked_sockets')" />
       <filter-btn-numeric v-if="filters.mapTier"
-        :filter="filters.mapTier" :name="t('item.map_tier')" />
+                          :filter="filters.mapTier" :name="t('item.map_tier')" />
       <filter-btn-numeric v-if="filters.areaLevel"
-        :filter="filters.areaLevel" :name="t('item.area_level')" />
+                          :filter="filters.areaLevel" :name="t('item.area_level')" />
       <filter-btn-numeric v-if="filters.heistWingsRevealed"
-        :filter="filters.heistWingsRevealed" :name="t('item.heist_wings_revealed')" />
-      <filter-btn-numeric v-if="filters.heistWingsTotal"
-                          :filter="filters.heistWingsTotal" name="t('item.heist_total_wings')" />
+                          :filter="filters.heistWingsRevealed" :name="t('item.heist_wings_revealed')" />
       <filter-btn-numeric v-if="filters.sentinelCharge"
-        :filter="filters.sentinelCharge" :name="t('item.sentinel_charge')" />
+                          :filter="filters.sentinelCharge" :name="t('item.sentinel_charge')" />
       <filter-btn-logical v-if="filters.mapBlighted" readonly
                           :filter="{ disabled: false }" :text="filters.mapBlighted.value" />
-      <filter-btn-logical v-if="filters.discriminator" readonly
+      <filter-btn-logical v-if="filters.discriminator?.value" readonly
                           :filter="{ disabled: false }" :text="filters.discriminator.value" />
       <filter-btn-numeric v-if="filters.itemLevel"
-        :filter="filters.itemLevel" :name="t('item.item_level')" />
+                          :filter="filters.itemLevel" :name="t('item.item_level')" />
       <filter-btn-numeric v-if="filters.stackSize"
-        :filter="filters.stackSize" :name="t('item.stock')" />
+                          :filter="filters.stackSize" :name="t('item.stock')" />
       <filter-btn-numeric v-if="filters.whiteSockets"
-        :filter="filters.whiteSockets" :name="t('item.white_sockets')" />
+                          :filter="filters.whiteSockets" :name="t('item.white_sockets')" />
       <filter-btn-numeric v-if="filters.gemLevel"
-        :filter="filters.gemLevel" :name="t('item.gem_level')" />
+                          :filter="filters.gemLevel" :name="t('item.gem_level')" />
       <filter-btn-numeric v-if="filters.quality"
-        :filter="filters.quality" :name="t('item.quality')" />
-      <filter-btn-logical v-if="filters.altQuality"
-                          :filter="filters.altQuality" :text="filters.altQuality.value" />
+                          :filter="filters.quality" :name="t('item.quality')" />
       <template v-if="filters.influences">
         <filter-btn-logical v-for="influence of filters.influences" :key="influence.value"
                             :filter="influence" :text="influence.value" :img="`/images/influence-${influence.value}.png`" />
       </template>
       <filter-btn-logical v-if="filters.unidentified"
-        :filter="filters.unidentified" :text="t('item.unidentified')" />
+                          :filter="filters.unidentified" :text="t('item.unidentified')" />
       <filter-btn-logical v-if="filters.veiled"
-        :filter="filters.veiled" :text="t('item.veiled')" />
+                          :filter="filters.veiled" :text="t('item.veiled')" />
       <filter-btn-logical v-if="filters.foil"
-        :filter="filters.foil" :text="t('item.foil_unique')" />
+                          :filter="filters.foil" :text="t('item.foil_unique')" />
       <filter-btn-logical v-if="filters.mirrored" active
-        :filter="filters.mirrored" :text="t(filters.mirrored.disabled ? 'item.not_mirrored' : 'item.mirrored')" />
+                          :filter="filters.mirrored" :text="t(filters.mirrored.disabled ? 'item.not_mirrored' : 'item.mirrored')" />
       <filter-btn-logical v-if="hasStats"
                           :collapse="statsVisibility.disabled"
                           :filter="statsVisibility"
@@ -69,7 +65,7 @@
                          :show-sources="showFilterSources"
                          @submit="handleStatsSubmit" />
         <div v-if="!filteredStats.length && !showUnknownMods"
-          class="border-b border-gray-700 py-2">{{ t('filters.empty') }}</div>
+             class="border-b border-gray-700 py-2">{{ t('filters.empty') }}</div>
         <template v-if="showUnknownMods">
           <unknown-modifier v-for="stat of item.unknownModifiers" :key="stat.type + '/' + stat.text"
                             :stat="stat" />
@@ -78,7 +74,7 @@
       </form>
       <div class="flex gap-x-4">
         <button @click="statsVisibility.disabled = !statsVisibility.disabled" class="bg-gray-700 px-2 py-1 text-gray-400 leading-none rounded-b w-40"
-        >{{  t('filters.collapse') }} <i class="fas fa-chevron-up pl-1 text-xs text-gray-600"></i></button>
+        >{{ t('filters.collapse') }} <i class="fas fa-chevron-up pl-1 text-xs text-gray-600"></i></button>
         <ui-toggle v-if="hiddenStats.length > 0"
                    v-model="showHidden" class="text-gray-400 pt-2">{{ t('filters.hidden_toggle') }}</ui-toggle>
         <ui-toggle
@@ -191,12 +187,12 @@ export default defineComponent({
   @apply px-2;
   min-width: 3rem;
 
-&:hover {
-   @apply bg-gray-700;
- }
+  &:hover {
+    @apply bg-gray-700;
+  }
 
-&.active {
-   background: linear-gradient(to bottom, theme('colors.gray.900'), theme('colors.gray.800'));
- }
+  &.active {
+    background: linear-gradient(to bottom, theme('colors.gray.900'), theme('colors.gray.800'));
+  }
 }
 </style>
