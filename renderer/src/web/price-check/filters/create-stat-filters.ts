@@ -274,7 +274,7 @@ export function calculatedStatToFilter (
               min: percentRoll(roll.value, -percent, Math.floor, dp),
               max: percentRoll(roll.value, +percent, Math.ceil, dp)
             }
-    filterDefault.min = Math.max(filterDefault.min, filterBounds.min)
+    filterDefault.min = Math.max(filterDefault.min, filterBounds.min, Math.floor(roll.value))
     filterDefault.max = Math.min(filterDefault.max, filterBounds.max)
 
     filter.roll = {
