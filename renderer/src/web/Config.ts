@@ -82,11 +82,14 @@ export async function initConfig () {
 export function poeWebApi () {
   const { language, realm } = AppConfig()
   switch (language) {
-    case 'en': return 'www.pathofexile.com'
-    case 'ru': return 'ru.pathofexile.com'
-    case 'cmn-Hant': return (realm === 'pc-garena')
-      ? 'web.poe.garena.tw'
-      : 'www.pathofexile.com'
+    case 'en':
+      return 'www.pathofexile.com'
+    case 'ru':
+      return 'ru.pathofexile.com'
+    case 'cmn-Hant':
+      return (realm === 'pc-garena')
+        ? 'web.poe.garena.tw'
+        : 'www.pathofexile.com'
   }
 }
 
@@ -316,7 +319,20 @@ export const defaultConfig = (): Config => ({
       images: [
         { id: 1, url: 'syndicate.jpg' }
       ]
-    } as widget.ImageStripWidget
+    } as widget.ImageStripWidget,
+    {
+      wmId: 104,
+      wmType: 'gem-margin',
+      wmTitle: 'Gem Margin',
+      wmWants: 'hide',
+      wmZorder: 104,
+      wmFlags: ['invisible-on-blur'],
+      anchor: {
+        pos: 'tc',
+        x: 50,
+        y: 10
+      }
+    } as widget.GemMarginWidget
   ]
 })
 
@@ -347,7 +363,7 @@ function upgradeConfig (_config: Config): Config {
       .chaosPriceThreshold = 0.05
 
     const mapCheck = config.widgets.find(w => w.wmType === 'map-check')!
-    ;(mapCheck as any).selectedStats.forEach((e: any) => {
+        ;(mapCheck as any).selectedStats.forEach((e: any) => {
       e.matcher = e.matchRef
       e.matchRef = undefined
     })
@@ -395,14 +411,14 @@ function upgradeConfig (_config: Config): Config {
 
   if (config.configVersion < 8) {
     const itemCheck = config.widgets.find(w => w.wmType === 'item-check')!
-    ;(itemCheck as widget.ItemCheckWidget).maps.showNewStats = false
+        ;(itemCheck as widget.ItemCheckWidget).maps.showNewStats = false
     itemCheck.maps.selectedStats = (itemCheck as widget.ItemCheckWidget).maps.selectedStats.map(entry => ({
       matcher: entry.matcher,
       decision:
-        (entry as any).valueDanger ? 'danger'
-          : (entry as any).valueWarning ? 'warning'
-              : (entry as any).valueDesirable ? 'desirable'
-                  : 'seen'
+                (entry as any).valueDanger ? 'danger'
+                  : (entry as any).valueWarning ? 'warning'
+                      : (entry as any).valueDesirable ? 'desirable'
+                          : 'seen'
     }))
 
     config.configVersion = 8
@@ -503,9 +519,9 @@ function upgradeConfig (_config: Config): Config {
     itemCheck.maps.profile = 1
     for (const stat of itemCheck.maps.selectedStats) {
       const p1decision =
-        (stat.decision === 'danger') ? 'd'
-          : (stat.decision === 'warning') ? 'w'
-              : (stat.decision === 'desirable') ? 'g' : 's'
+                (stat.decision === 'danger') ? 'd'
+                  : (stat.decision === 'warning') ? 'w'
+                      : (stat.decision === 'desirable') ? 'g' : 's'
 
       stat.decision = `${p1decision}--`
     }

@@ -1,291 +1,356 @@
 <template>
   <Widget :config="config" :move-handles="['tl', 'bl']" :removable="false" :inline-edit="false">
     <div class="widget-default-style flex flex-col p-1 gap-1" style="min-width: 24rem;">
-      <transition-group v-if="starred.length" tag="div"
-                        :enter-active-class="$style.starredItemEnter"
-                        class="flex gap-x-1 bg-gray-800 rounded">
-        <button v-for="item in starred" :key="item.info.refName + item.discr"
-                :class="$style.starredItem"
-                @click="starredItemClick($event, item)">
-          <ItemQuickPrice
-              :item-img="item.info.icon"
-              :price="item.price"
-              currency-text
-          ></ItemQuickPrice>
-          <div class="ml-1 truncate" style="max-width: 7rem;">{{ item.info.name }}</div>
-          <div v-if="item.discr"
-               class="ml-1 truncate" style="max-width: 7rem;">{{ t(item.discr) }}</div>
-        </button>
-      </transition-group>
-      <ui-timeout v-if="!showSearch"
-                  ref="showTimeout"
-                  @timeout="makeInvisible"
-                  class="self-center" :ms="4000" />
-      <div v-else class="bg-gray-800 rounded">
-        <div class="flex gap-x-1 p-1">
-          <input type="text" :placeholder="t(':input')" class="rounded bg-gray-900 px-1 flex-1"
-                 v-model="searchValue">
-          <button @click="clearSelectedItems" class="btn"><i class="fas fa-times" /> {{ t(':reset') }}</button>
-        </div>
-        <div class="flex gap-x-2 px-2 mb-px1 py-1">
-          <span>{{ t(':heist_target') }}</span>
-          <div class="flex gap-x-1">
-            <button :class="{ 'border': (typeFilter === 'gem') }" class="rounded px-2 bg-gray-900"
-                    @click="typeFilter = 'gem'">{{ t(':target_gem') }}</button>
-            <button :class="{ 'border': (typeFilter === 'replica') }" class="rounded px-2 bg-gray-900"
-                    @click="typeFilter = 'replica'">{{ t(':target_replica') }}, <span class="line-through text-gray-600">Base items</span></button>
-          </div>
-        </div>
+      <div>{{ t(':name') }}</div>
+      <div v-if=" ! initialLoading()" class="bg-gray-800 rounded">
+<!--        <div class="flex gap-x-1 p-1">-->
+<!--          <input type="text" :placeholder="t(':input')" class="rounded bg-gray-900 px-1 flex-1"-->
+<!--                 v-model="searchValue">-->
+<!--          <button class="btn">-->
+<!--            <i class="fas fa-times" />-->
+<!--            {{ t(':reset') }}-->
+<!--          </button>-->
+<!--        </div>-->
         <div class="flex flex-col">
-          <div v-for="item in (results || [])" :key="item.name">
-            <div class="flex" :class="$style.itemWrapper">
-              <div class="w-8 h-8 flex items-center justify-center">
-                <img :src="item.icon" class="max-w-full max-h-full overflow-hidden">
-              </div>
-              <div>
-                <div class="h-8 flex items-center px-1">{{ item.name }}</div>
-                <div v-if="item.gem" class="flex gap-x-1">
-                  <button v-for="altQuality in []" :key="altQuality"
-                          @click="selectItem(item, { altQuality })"
-                  >{{ t(altQuality) }}</button>
+          <div v-for="item in (results || [])" :key="item.name" class="border-solid border-b border-b-gray-700">
+            <div :class="$style.itemWrapper">
+              <div class="flex">
+                <div class="w-8 h-8 flex items-center justify-center">
+                  <img :src="item.icon || undefined" class="max-w-full max-h-full overflow-hidden">
                 </div>
-                <div v-else-if="item.unique" class="flex gap-x-1">
-                  <button  @click="selectItem(item, { unique: true })"
-                  >{{ t('Select') }}</button>
+                <div>
+                  <div class="h-8 flex items-center px-1">{{ item.name }}</div>
+                </div>
+              </div>
+              <div class="flex">
+                <div>
+                  <div class="h-8 flex items-center px-1 cursor-pointer hover:underline" @click="openLink(item.fromLink)">From: {{item.from.chaos}} <img src="/images/chaos.png" class="w-6 h-6"> ({{ item.from.id }})</div>
+                  <div class="h-8 flex items-center px-1">Profit: {{ item.profit }}
+                    <img src="/images/chaos.png" class="w-6 h-6">
+                  </div>
+                </div>
+                <div>
+                  <div class="h-8 flex items-center px-1 cursor-pointer hover:underline" @click="openLink(item.toLink)">To: {{item.to.chaos}} <img src="/images/chaos.png" class="w-6 h-6"> ({{ item.to.id }})</div>
+                  <div class="h-8 flex items-center px-1">Chance: {{ item.chance }}</div>
                 </div>
               </div>
             </div>
           </div>
-          <div v-if="results === false"
-               class="text-center p-8 max-w-xs"><i class="fas fa-search" /> {{ t(':too_many') }}</div>
-          <div v-else-if="!results.length"
-               class="text-center p-8 max-w-xs"><i class="fas fa-exclamation-triangle" /> {{ t(':not_found') }}</div>
         </div>
+        <div class="flex items-center justify-center p-2">
+          <button @click="prevPage" :style="currentPage === 1 ? 'visibility: hidden' : 'visibility:visible'" class="px-2 py-1 rounded bg-gray-900 text-gray-600">Prev</button>
+          <div class="px-2 py-1 cursor-pointer text-gray-600">
+            {{ currentPage }}
+          </div>
+          <button @click="nextPage" :style="currentPage === totalPages ? 'visibility: hidden' : 'visibility:visible'" class="px-2 py-1 rounded bg-gray-900 text-gray-600">Next</button>
+        </div>
+      </div>
+      <div v-else class="text-center">
+        <i class="fas fa-dna fa-spin px-2" />
       </div>
     </div>
   </Widget>
 </template>
 
-<script lang="ts">
-import { ref } from 'vue'
-import { distance } from 'fastest-levenshtein'
-import { BaseType, ITEM_BY_TRANSLATED, CLIENT_STRINGS as _$, ALTQ_GEM_NAMES, REPLICA_UNIQUE_NAMES } from '@/assets/data'
-import { AppConfig } from '@/web/Config'
-import { CurrencyValue } from '@/web/background/Prices'
-
-interface SelectedItem {
-  info: BaseType
-  discr?: string
-  chaos?: number
-  price?: CurrencyValue
-}
-
-function useSelectedItems () {
-  const items = ref<SelectedItem[]>([])
-
-  function addItem (newItem: SelectedItem) {
-    if (items.value.some(item =>
-      item.info.name === newItem.info.name &&
-        item.discr === newItem.discr
-    )) return false
-
-    if (items.value.length < 5) {
-      items.value.push(newItem)
-      items.value.sort((a, b) => {
-        return (b.chaos ?? 0) - (a.chaos ?? 0)
-      })
-    } else {
-      items.value = [newItem]
-    }
-    return true
-  }
-
-  function clearItems () {
-    items.value = []
-  }
-
-  return { items, addItem, clearItems }
-}
-
-function findItems (opts: {
-  search: string
-  namespace: 'GEM' | 'UNIQUE'
-  itemNames: () => Generator<string>
-}): BaseType[] | false {
-  const search = opts.search.trim()
-  const lcSearch = search.toLowerCase().split(/\s+/).sort((a, b) => b.length - a.length)
-  const lcLongestWord = lcSearch[0]
-  if (search.length < 3) return false
-
-  const MAX_RESULTS = 5 // NOTE: don't want to pick from too many results
-  const out = []
-  for (const itemName of opts.itemNames()) {
-    const lcName = itemName.toLowerCase()
-    if (
-      lcSearch.every(part => lcName.includes(part)) &&
-        ((AppConfig().language === 'cmn-Hant') || lcName.split(/\s+/).some(part => part.startsWith(lcLongestWord)))
-    ) {
-      const match = ITEM_BY_TRANSLATED(opts.namespace, itemName)
-      out.push(...match ?? [])
-      if (out.length > MAX_RESULTS) return false
-    }
-  }
-  return out
-}
-
-function fuzzyFindHeistGem (badStr: string) {
-  badStr = badStr.toLowerCase()
-
-  const qualities = [
-    ['Anomalous', _$.QUALITY_ANOMALOUS.toString().slice(2, -2)],
-    ['Divergent', _$.QUALITY_DIVERGENT.toString().slice(2, -2)],
-    ['Phantasmal', _$.QUALITY_PHANTASMAL.toString().slice(2, -2)]
-  ]
-
-  let bestMatch: { name: string, altQuality: string }
-  let minDist = Infinity
-  for (const name of ALTQ_GEM_NAMES()) {
-    for (const [altQuality, reStr] of qualities) {
-      const exactStr = reStr.replace('(.*)', name).toLowerCase()
-      if (Math.abs(exactStr.length - badStr.length) > 5) {
-        continue
-      }
-
-      const dist = distance(badStr, exactStr)
-      if (dist < minDist) {
-        bestMatch = { name, altQuality }
-        if (dist === 0) return bestMatch
-        minDist = dist
-      }
-    }
-  }
-  return bestMatch!
-}
-</script>
-
 <script setup lang="ts">
-import { shallowRef, computed, nextTick, inject } from 'vue'
+import { computed, inject, nextTick, shallowRef } from 'vue'
 import { useI18nNs } from '@/web/i18n'
 import { ItemSearchWidget, WidgetManager } from './interfaces'
 import { usePoeninja } from '@/web/background/Prices'
-import { Host } from '@/web/background/IPC'
-import { createVirtualItem, ItemRarity } from '@/parser/ParsedItem'
-import { ItemCategory } from '@/parser'
+import { ITEMS_ITERATOR } from '@/assets/data'
 
-import ItemQuickPrice from '@/web/ui/ItemQuickPrice.vue'
 import Widget from './Widget.vue'
+import { AppConfig } from '@/web/Config'
+import { ItemFilters } from '@/web/price-check/filters/interfaces'
+import { getTradeEndpoint } from '@/web/price-check/trade/common'
+import { createTradeRequest } from '@/web/price-check/trade/pathofexile-trade'
+import { ItemCategory, ParsedItem } from '@/parser'
+
+interface Gem {
+  id: string
+  level: number
+  quality: any
+  corrupted: boolean
+  vaal: boolean
+  chaos: number
+}
+
+interface GemVariants {
+  name: string
+  variants: Record<string, Gem>
+}
 
 const props = defineProps<{
   config: ItemSearchWidget
 }>()
 
 const wm = inject<WidgetManager>('wm')!
-const { t } = useI18nNs('item_search')
-const { findPriceByQuery, autoCurrency, queuePricesFetch } = usePoeninja()
+if (props.config.wmFlags[0] === 'uninitialized') {
+  props.config.wmFlags = ['invisible-on-blur']
+  props.config.anchor = {
+    pos: 'tc',
+    x: (Math.random() * (60 - 40) + 40),
+    y: (Math.random() * (15 - 5) + 5)
+  }
+  nextTick(() => {
+    wm.show(props.config.wmId)
+  })
+}
 
-const showTimeout = shallowRef<{ reset:() => void } | null>(null)
+const { t } = useI18nNs('gem_margin')
+const { xchgRate, initialLoading, getPricesFor } = usePoeninja()
 
 nextTick(() => {
   props.config.wmFlags = ['invisible-on-blur']
 })
 
-const searchValue = shallowRef('')
-const { items: starred, addItem, clearItems } = useSelectedItems()
+const isVaal = (name: string) => {
+  return name.includes('Vaal ')
+}
 
-const typeFilter = shallowRef<'gem' | 'replica'>('gem')
+const stripVaal = (name: string) => {
+  return name.replace('Vaal ', '')
+}
 
-Host.onEvent('MAIN->CLIENT::ocr-text', (e) => {
-  if (e.target !== 'heist-gems') return
+type GemInfo = {
+  name: string,
+  icon: string | null,
+  vaalIcon: string | null,
+  discriminator: string | null,
+  transfigured: boolean,
+  normalVariant: string | null
+};
 
-  for (const para of e.paragraphs) {
-    const res = fuzzyFindHeistGem(para)
-    selectItem(
-        ITEM_BY_TRANSLATED('GEM', res.name)![0],
-        { altQuality: res.altQuality, withTimeout: true }
-    )
+// Get gem icons
+const gemInfo: Record<string, GemInfo> = {}
+for (const baseType of ITEMS_ITERATOR('"namespace":"GEM"')) {
+  const isVaalGem = isVaal(baseType.name)
+  const name = isVaalGem ? stripVaal(baseType.name) : baseType.name
+  if (!Object.prototype.hasOwnProperty.call(gemInfo, name)) {
+    gemInfo[name] = { name, icon: null, vaalIcon: null, discriminator: null, transfigured: false, normalVariant: null }
   }
+
+  if (isVaalGem) {
+    gemInfo[name].vaalIcon = baseType.icon
+  } else {
+    gemInfo[name].icon = baseType.icon
+  }
+
+  if (baseType.tradeDisc) {
+    gemInfo[name].discriminator = baseType.tradeDisc
+    gemInfo[name].transfigured = baseType.gem?.transfigured || false
+    gemInfo[name].normalVariant = baseType.gem?.normalVariant || null
+  }
+}
+
+// Get GCP price
+// const gcpPrice = computed(() => {
+//   if (!xchgRate.value) {
+//     return 0
+//   }
+// })
+
+const gems = computed(() => {
+  if (!xchgRate.value) {
+    return []
+  }
+
+  return getPricesFor({
+    ns: 'GEM',
+    url: 'skill-gems'
+  })
 })
 
-function selectItem (item: BaseType, opts: { altQuality?: string, unique?: true, withTimeout?: true }) {
-  queuePricesFetch()
+const gemCollection = computed(() => {
+  if (!gems.value?.length) {
+    return []
+  }
 
-  let price: ReturnType<typeof findPriceByQuery>
-  if (opts.altQuality) {
-    price = findPriceByQuery({
-      ns: item.namespace,
-      name: `${opts.altQuality} ${item.refName}`,
-      variant: '1'
-    })
-  } else {
-    price = findPriceByQuery({
-      ns: item.namespace,
-      name: item.refName,
-      variant: item.unique!.base
-    })
+  const collection: Record<string, GemVariants> = {}
+
+  for (const line of gems.value[0].lines) {
+    const isVaal = line.name.includes('Vaal')
+    const name = isVaal ? stripVaal(line.name) : line.name
+    let id = line.variant
+    if (isVaal) {
+      id = id + 'v'
+    }
+    if (!Object.prototype.hasOwnProperty.call(collection, name)) {
+      collection[name] = { name, variants: {} }
+    }
+
+    const corrupted = line.variant.includes('c')
+    const [level, quality] = line.variant.replace('c', '').split('/')
+
+    collection[name].variants[id] = {
+      id,
+      level: level && parseInt(level, 10),
+      quality: (quality && parseInt(quality, 10)) || null,
+      corrupted,
+      vaal: isVaal,
+      chaos: Math.floor(line.chaos)
+    }
   }
-  const isAdded = addItem({
-    info: item,
-    discr: opts.altQuality,
-    chaos: price?.chaos,
-    price: (price != null) ? autoCurrency(price.chaos) : undefined
-  })
-  if (isAdded && opts.withTimeout) {
-    showTimeout.value?.reset()
-    props.config.wmFlags = []
+
+  return collection
+})
+
+const getVariant = (gem: GemVariants, variants: string[]): Gem | undefined => {
+  for (const variant of variants) {
+    if (gem.variants[variant]) {
+      return gem.variants[variant]
+    }
   }
-  searchValue.value = ''
+}
+
+const getTradeLink = (info: GemInfo, gem: Gem) => {
+  const { leagueId } = AppConfig()
+  const name = info.normalVariant ? info.normalVariant : info.name
+  const filters: ItemFilters = {
+    searchExact: {
+      baseType: name,
+      baseTypeTrade: name
+    },
+    trade: {
+      offline: false,
+      onlineInLeague: false,
+      league: leagueId || 'Standard',
+      collapseListings: 'api',
+      listed: undefined,
+      currency: undefined
+    },
+    corrupted: {
+      value: gem.corrupted
+    },
+    gemLevel: {
+      value: gem.level,
+      disabled: false
+    }
+  }
+
+  if (gem.quality) {
+    filters.quality = {
+      value: gem.quality,
+      disabled: false
+    }
+  }
+
+  if (info.discriminator) {
+    filters.discriminator = {
+      trade: info.discriminator
+    }
+  }
+
+  const item: ParsedItem = {
+    category: ItemCategory.Gem,
+    isUnidentified: false,
+    isCorrupted: false,
+    newMods: [],
+    statsByType: [],
+    unknownModifiers: [],
+    influences: [],
+    info: {
+      name,
+      refName: name,
+      namespace: 'GEM',
+      icon: '',
+      gem: {}
+    },
+    rawText: ''
+  }
+  const tradeRequest = createTradeRequest(filters, [], item)
+  const link = `https://${getTradeEndpoint()}/trade/search/${leagueId}?q=${JSON.stringify(tradeRequest)}`
+  return link
+}
+
+const pairs = computed(() => {
+  if (!gemCollection.value) {
+    return []
+  }
+
+  const output = []
+
+  for (const gem of Object.values(gemCollection.value)) {
+    const name = gem.name
+
+    let fromVariants = ['20/20', '20', '1/20', '1']
+    let toVariants = ['21/20c', '21c']
+    let failueVariants = ['20/20c', '20c', '1/20c', '1c']
+
+    if (['Empower Support', 'Enlighten Support', 'Enhance Support'].includes(name)) {
+      fromVariants = ['3']
+      toVariants = ['4c']
+      failueVariants = ['3c']
+    } else if (['Awakened Empower Support', 'Awakened Enlighten Support', 'Awakened Enhance Support'].includes(name)) {
+      fromVariants = ['4/20', '4', '1/20', '1']
+      toVariants = ['5/20c', '5c']
+      failueVariants = ['4/20c', '4c']
+    } else if (name.includes('Awakened')) {
+      fromVariants = ['5/20', '5', '1/20', '1']
+      toVariants = ['6/20c', '6c']
+      failueVariants = ['5/20c', '5c']
+    }
+
+    const from = getVariant(gem, fromVariants)
+    const to = getVariant(gem, toVariants)
+    const failure = getVariant(gem, failueVariants)
+
+    if (!from || !to) {
+      console.log('Missing variant', name, gem.variants)
+      continue
+    }
+    const profit = Math.floor(to.chaos - from.chaos)
+    const chance = Math.floor(to.chaos / from.chaos)
+    if (chance < 7) {
+      continue
+    }
+
+    output.push(
+      {
+        name,
+        icon: gemInfo[name].icon,
+        from,
+        fromLink: getTradeLink(gemInfo[name], from),
+        to,
+        toLink: getTradeLink(gemInfo[name], to),
+        failure,
+        chance,
+        profit
+      }
+    )
+  }
+
+  return output.sort((a, b) => b.profit - a.profit)
+})
+
+const openLink = (link: string) => {
+  window.open(link, '_blank')
+}
+
+const currentPage = shallowRef(1)
+const pageSize = 3
+const totalPages = computed(() => {
+  if (!pairs.value) {
+    return 0
+  }
+
+  return Math.ceil(pairs.value.length / pageSize)
+})
+
+const nextPage = () => {
+  currentPage.value = currentPage.value + 1
+}
+const prevPage = () => {
+  currentPage.value = currentPage.value - 1
 }
 
 const results = computed(() => {
-  if (typeFilter.value === 'gem') {
-    return findItems({
-      search: searchValue.value,
-      namespace: 'GEM',
-      itemNames: ALTQ_GEM_NAMES
-    })
-  } else {
-    return findItems({
-      search: searchValue.value,
-      namespace: 'UNIQUE',
-      itemNames: REPLICA_UNIQUE_NAMES
-    })
+  if (!pairs.value) {
+    return []
   }
+
+  return pairs.value.slice((currentPage.value - 1) * pageSize, currentPage.value * pageSize)
 })
-
-function clearSelectedItems () {
-  clearItems()
-  props.config.wmFlags = ['invisible-on-blur']
-}
-
-const showSearch = wm.active
-
-function makeInvisible () {
-  props.config.wmFlags = ['invisible-on-blur']
-}
-
-function starredItemClick (e: MouseEvent, item: SelectedItem) {
-  const parsed = (item.info.namespace === 'GEM')
-    ? createVirtualItem({
-      category: ItemCategory.Gem,
-      info: item.info,
-      gemLevel: 1
-    })
-    : createVirtualItem({
-      rarity: ItemRarity.Unique,
-      info: item.info
-    })
-
-  Host.selfDispatch({
-    name: 'MAIN->CLIENT::item-text',
-    payload: {
-      clipboard: parsed.rawText,
-      item: parsed,
-      position: { x: e.clientX, y: e.clientY },
-      focusOverlay: true,
-      target: 'price-check'
-    }
-  })
-}
 </script>
 
 <style lang="postcss" module>
@@ -320,10 +385,17 @@ function starredItemClick (e: MouseEvent, item: SelectedItem) {
 }
 
 @keyframes starredItemEnter {
-  0% { @apply bg-transparent; }
-  50% { @apply bg-gray-700; }
-  100% { @apply bg-transparent; }
+  0% {
+    @apply bg-transparent;
+  }
+  50% {
+    @apply bg-gray-700;
+  }
+  100% {
+    @apply bg-transparent;
+  }
 }
+
 .starredItemEnter {
   animation: starredItemEnter 0.8s linear;
 }

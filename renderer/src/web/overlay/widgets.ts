@@ -8,18 +8,22 @@ export interface Widget {
 }
 
 export type WellKnownFlag =
-  'uninitialized' |
-  'skip-menu' |
-  'has-browser' |
-  'invisible-on-blur' |
-  'hide-on-blur' |
-  'hide-on-focus' |
-  'ignore-ui-visibility'
+    'uninitialized' |
+    'skip-menu' |
+    'has-browser' |
+    'invisible-on-blur' |
+    'hide-on-blur' |
+    'hide-on-focus' |
+    'ignore-ui-visibility'
 
 export interface Anchor {
   pos: string
   x: number
   y: number
+}
+
+export interface GemMarginWidget extends Widget {
+  anchor: Anchor
 }
 
 export interface WidgetMenu extends Widget {

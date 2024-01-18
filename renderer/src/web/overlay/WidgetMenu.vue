@@ -25,6 +25,7 @@
               <button class="text-left hover:bg-gray-400 rounded px-1 whitespace-nowrap" @click="createOfType('timer')">{{ t('stopwatch.name') }}</button>
               <button class="text-left hover:bg-gray-400 rounded px-1 whitespace-nowrap" @click="createOfType('stash-search')">{{ t('stash_search.name') }}</button>
               <button class="text-left hover:bg-gray-400 rounded px-1 whitespace-nowrap" @click="createOfType('image-strip')">{{ t('image_strip.name') }}</button>
+              <button class="text-left hover:bg-gray-400 rounded px-1 whitespace-nowrap" @click="createOfType('gem-margin')">{{ t('gem_margin.name') }}</button>
               <!-- <button class="text-left hover:bg-gray-400 rounded px-1 whitespace-nowrap" @click="createOfType('TODO')">Image</button> -->
             </div>
           </template>

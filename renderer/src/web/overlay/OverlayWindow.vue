@@ -41,6 +41,7 @@ import WidgetMenu from './WidgetMenu.vue'
 import PriceCheckWindow from '@/web/price-check/PriceCheckWindow.vue'
 import WidgetItemCheck from '@/web/item-check/WidgetItemCheck.vue'
 import WidgetImageStrip from './WidgetImageStrip.vue'
+import WidgetGemMargin from './WidgetGemMargin.vue'
 import WidgetDelveGrid from './WidgetDelveGrid.vue'
 import WidgetItemSearch from './WidgetItemSearch.vue'
 import WidgetSettings from '../settings/SettingsWindow.vue'
@@ -61,6 +62,7 @@ export default defineComponent({
     WidgetPriceCheck: PriceCheckWindow,
     WidgetItemCheck,
     WidgetImageStrip,
+    WidgetGemMargin,
     WidgetDelveGrid,
     WidgetItemSearch,
     WidgetSettings,

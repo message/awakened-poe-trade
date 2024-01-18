@@ -243,6 +243,16 @@
 	"not_found": "No items found.",
 	"ocr_gems_key": "Perform an OCR for a Skill Gem"
   },
+  "gem_margin": {
+	"name": "Gem margin",
+	"input": "Search by name\u2026",
+	"reset": "Reset",
+	"exclude": "Exclude:",
+	"exclude_awakened": "Awakened",
+	"exclude_double_corrupts": "Double Corrupts",
+	"too_many": "Too many items found, enter the name more precisely.",
+	"not_found": "No items found."
+  },
   "map_check": {
 	"name": "Map check",
 	"has_outdated": "Wording of some stats has been changed. Check and update dangerous map mods in the settings. (This message will be hidden as soon as you remove all outdated stats)",

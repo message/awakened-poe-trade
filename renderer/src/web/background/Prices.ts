@@ -44,7 +44,7 @@ export const usePoeninja = createGlobalState(() => {
 
     if (!force && (
       (Date.now() - lastUpdateTime) < UPDATE_INTERVAL_MS ||
-      (Date.now() - lastInterestTime) > INTEREST_SPAN_MS
+            (Date.now() - lastInterestTime) > INTEREST_SPAN_MS
     )) return
     if (downloadController) downloadController.abort()
 
@@ -55,7 +55,6 @@ export const usePoeninja = createGlobalState(() => {
         signal: downloadController.signal
       })
       const jsonBlob = await response.text()
-
       PRICES_DB = splitJsonBlob(jsonBlob)
       const divine = findPriceByQuery({ ns: 'ITEM', name: 'Divine Orb', variant: undefined })
       if (divine && divine.chaos >= 30) {
@@ -75,8 +74,10 @@ export const usePoeninja = createGlobalState(() => {
   function selectedLeagueToUrl (): string {
     const league = leagues.selectedId.value!
     switch (league) {
-      case 'Standard': return 'standard'
-      case 'Hardcore': return 'hardcore'
+      case 'Standard':
+        return 'standard'
+      case 'Hardcore':
+        return 'hardcore'
       default:
         return (league.startsWith('Hardcore ')) ? 'challengehc' : 'challenge'
     }
@@ -103,6 +104,21 @@ export const usePoeninja = createGlobalState(() => {
         ...info,
         url: `https://poe.ninja/${selectedLeagueToUrl()}/${url}/${denseInfoToDetailsId(info)}`
       }
+    }
+    return null
+  }
+
+  function getPricesFor (query: { ns: string, url: string }) {
+    for (const { ns, url, lines } of PRICES_DB) {
+      if (ns !== query.ns) continue
+      if (url !== query.url) continue
+
+      let json = lines
+      if (lines.endsWith(',')) {
+        json = lines.slice(0, -1)
+      }
+
+      return JSON.parse(`[${json}]`)
     }
     return null
   }
@@ -143,6 +159,7 @@ export const usePoeninja = createGlobalState(() => {
     findPriceByQuery,
     autoCurrency,
     queuePricesFetch,
+    getPricesFor,
     initialLoading: () => isLoading.value && !PRICES_DB.length
   }
 })
