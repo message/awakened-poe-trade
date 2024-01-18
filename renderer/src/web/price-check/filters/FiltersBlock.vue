@@ -13,6 +13,8 @@
                           :filter="filters.sentinelCharge" :name="t('item.sentinel_charge')" />
       <filter-btn-logical v-if="filters.mapBlighted" readonly
                           :filter="{ disabled: false }" :text="filters.mapBlighted.value" />
+      <filter-btn-logical v-if="filters.rarity?.value === 'magic'" readonly
+        :filter="{ disabled: false }" text="Magic" />
       <filter-btn-logical v-if="filters.discriminator?.value" readonly
                           :filter="{ disabled: false }" :text="filters.discriminator.value" />
       <filter-btn-numeric v-if="filters.itemLevel"
@@ -134,9 +136,9 @@ export default defineComponent({
     })
 
     const showUnknownMods = computed(() =>
-      props.item.unknownModifiers.length &&
-      props.item.category !== ItemCategory.Sentinel &&
-      !(props.item.category === ItemCategory.Map && props.item.rarity === ItemRarity.Unique)
+        props.item.unknownModifiers.length &&
+        props.item.category !== ItemCategory.Sentinel &&
+        !(props.item.category === ItemCategory.Map && props.item.rarity === ItemRarity.Unique)
     )
 
     const { t } = useI18n()
@@ -168,7 +170,7 @@ export default defineComponent({
       hiddenStats: computed(() => props.stats.filter(s => s.hidden)),
       showUnknownMods,
       hasStats: computed(() =>
-        props.stats.length ||
+          props.stats.length ||
           (showUnknownMods.value && props.item.rarity === ItemRarity.Unique) ||
           props.presets.length > 1),
       handleStatsSubmit () {
