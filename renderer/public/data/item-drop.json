@@ -339,14 +339,14 @@
     "items": []
   },
   {
-	"query": [
-	  "ITEM::Unrelenting Timeless Eternal Emblem",
-	  "ITEM::Unrelenting Timeless Karui Emblem",
-	  "ITEM::Unrelenting Timeless Maraketh Emblem",
-	  "ITEM::Unrelenting Timeless Templar Emblem",
-	  "ITEM::Unrelenting Timeless Vaal Emblem"
-	],
-	"items": []
+    "query": [
+      "ITEM::Unrelenting Timeless Eternal Emblem",
+      "ITEM::Unrelenting Timeless Karui Emblem",
+      "ITEM::Unrelenting Timeless Maraketh Emblem",
+      "ITEM::Unrelenting Timeless Templar Emblem",
+      "ITEM::Unrelenting Timeless Vaal Emblem"
+    ],
+    "items": []
   },
   {
     "query": [
@@ -412,6 +412,16 @@
       "UNIQUE::Saqawal's Nest // Blood Raiment",
       "UNIQUE::Saqawal's Winds // Soldier Gloves",
       "UNIQUE::Saqawal's Talons // Hydrascale Boots"
+    ],
+    "items": []
+  },
+  {
+    "query": [
+      "ITEM::Cartographer's Delirium Orb",
+      "ITEM::Singular Delirium Orb",
+      "ITEM::Fine Delirium Orb",
+      "ITEM::Diviner's Delirium Orb",
+      "ITEM::Skittering Delirium Orb"
     ],
     "items": []
   },
@@ -559,14 +569,6 @@
       "UNIQUE::Leadership's Price // Onyx Amulet"
     ]
   },
-
-
-
-
-
-
-
-
   {
     "query": [
       "UNIQUE::Primordial Might // Crimson Jewel",
@@ -934,7 +936,6 @@
       "UNIQUE::Soul Ripper"
     ]
   },
-
   {
     "query": [
       "ITEM::Deafening Essence of Greed",
