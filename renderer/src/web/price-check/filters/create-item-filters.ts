@@ -87,6 +87,12 @@ export function createFilters (
         disabled: false
       }
     }
+    if (item.info.refName === 'Filled Coffin') {
+      filters.itemLevel = {
+        value: item.itemLevel!,
+        disabled: false
+      }
+    }
     return filters
   }
 
@@ -415,7 +421,7 @@ function t (opts: CreateOptions, info: BaseType) {
   return (opts.useEn) ? info.refName : info.name
 }
 
-function floorToBracket (value: number, brackets: readonly number[]) {
+export function floorToBracket (value: number, brackets: readonly number[]) {
   let prev = brackets[0]
   for (const num of brackets) {
     if (num > value) {
