@@ -221,7 +221,7 @@ export function createFilters (
 
   const forAdornedJewel = (
     item.rarity === ItemRarity.Magic &&
-    item.isCorrupted &&
+    // item.isCorrupted && -- let the buyer corrupt
     (item.category === ItemCategory.Jewel || item.category === ItemCategory.AbyssJewel))
 
   if (!item.isUnmodifiable && (

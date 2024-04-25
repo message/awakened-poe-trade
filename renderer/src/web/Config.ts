@@ -3,6 +3,9 @@ import isDeepEqual from 'fast-deep-equal'
 import { Host } from '@/web/background/IPC'
 import { HostConfig, ShortcutAction } from '@ipc/types'
 import type * as widget from './overlay/widgets'
+import type { StashSearchWidget } from './stash-search/widget'
+import type { ItemCheckWidget } from './item-check/widget'
+import type { ItemSearchWidget } from './item-search/widget'
 
 const _config = shallowRef<Config | null>(null)
 let _lastSavedConfig: Config | null = null
@@ -230,7 +233,7 @@ export const defaultConfig = (): Config => ({
           }
         ]
       }
-    } as widget.ItemCheckWidget,
+    } as ItemCheckWidget,
     {
       wmId: 4,
       wmType: 'delve-grid',
@@ -260,7 +263,7 @@ export const defaultConfig = (): Config => ({
         x: 10,
         y: 20
       }
-    } as widget.ItemSearchWidget,
+    } as ItemSearchWidget,
     // --- DEFAULT ---
     {
       wmId: 101,
@@ -280,7 +283,7 @@ export const defaultConfig = (): Config => ({
         { id: 3, name: '', text: '"Cannot Leech Life"', hotkey: null },
         { id: 4, name: '', text: '"Cannot Leech Mana"', hotkey: null }
       ]
-    } as widget.StashSearchWidget,
+    } as StashSearchWidget,
     {
       wmId: 102,
       wmType: 'stash-search',
@@ -301,7 +304,7 @@ export const defaultConfig = (): Config => ({
         { id: 5, name: '', text: '"Map Device" "Rarity: Normal"', hotkey: null },
         { id: 6, name: '', text: 'Tane Laboratory', hotkey: null }
       ]
-    } as widget.StashSearchWidget,
+    } as StashSearchWidget,
     {
       wmId: 103,
       wmType: 'image-strip',
@@ -409,8 +412,8 @@ function upgradeConfig (_config: Config): Config {
 
   if (config.configVersion < 8) {
     const itemCheck = config.widgets.find(w => w.wmType === 'item-check')!
-        ;(itemCheck as widget.ItemCheckWidget).maps.showNewStats = false
-    itemCheck.maps.selectedStats = (itemCheck as widget.ItemCheckWidget).maps.selectedStats.map(entry => ({
+        ;(itemCheck as ItemCheckWidget).maps.showNewStats = false
+    itemCheck.maps.selectedStats = (itemCheck as ItemCheckWidget).maps.selectedStats.map(entry => ({
       matcher: entry.matcher,
       decision:
                 (entry as any).valueDanger ? 'danger'
@@ -497,7 +500,7 @@ function upgradeConfig (_config: Config): Config {
       })
     })
 
-    const itemCheck = config.widgets.find(w => w.wmType === 'item-check') as widget.ItemCheckWidget
+    const itemCheck = config.widgets.find(w => w.wmType === 'item-check') as ItemCheckWidget
     itemCheck.wikiKey = (config as any).wikiKey
     itemCheck.poedbKey = null
     itemCheck.craftOfExileKey = (config as any).craftOfExileKey
@@ -510,10 +513,10 @@ function upgradeConfig (_config: Config): Config {
     const priceCheck = config.widgets.find(w => w.wmType === 'price-check') as widget.PriceCheckWidget
     priceCheck.builtinBrowser = false
 
-    const itemSearch = config.widgets.find(w => w.wmType === 'item-search') as widget.ItemSearchWidget
+    const itemSearch = config.widgets.find(w => w.wmType === 'item-search') as ItemSearchWidget
     itemSearch.ocrGemsKey = null
 
-    const itemCheck = config.widgets.find(w => w.wmType === 'item-check') as widget.ItemCheckWidget
+    const itemCheck = config.widgets.find(w => w.wmType === 'item-check') as ItemCheckWidget
     itemCheck.maps.profile = 1
     for (const stat of itemCheck.maps.selectedStats) {
       const p1decision =
@@ -531,7 +534,7 @@ function upgradeConfig (_config: Config): Config {
     const delve = config.widgets.find(w => w.wmType === 'delve-grid') as widget.DelveGridWidget
     delve.toggleKey = (config as any).delveGridKey
 
-    const itemCheck = config.widgets.find(w => w.wmType === 'item-check') as widget.ItemCheckWidget
+    const itemCheck = config.widgets.find(w => w.wmType === 'item-check') as ItemCheckWidget
     itemCheck.hotkey = (config as any).itemCheckKey
 
     if (itemCheck.maps.profile === undefined) {
@@ -553,7 +556,7 @@ function upgradeConfig (_config: Config): Config {
 
   for (const widget of config.widgets) {
     if (widget.wmType === 'stash-search') {
-      (widget as widget.StashSearchWidget).enableHotkeys ??= true
+      (widget as StashSearchWidget).enableHotkeys ??= true
     }
   }
 
@@ -583,7 +586,7 @@ function getConfigForHost (): HostConfig {
     action: { type: 'toggle-overlay' },
     keepModKeys: true
   })
-  const itemCheck = AppConfig('item-check') as widget.ItemCheckWidget
+  const itemCheck = AppConfig('item-check') as ItemCheckWidget
   if (itemCheck.wikiKey) {
     actions.push({
       shortcut: itemCheck.wikiKey,
@@ -632,7 +635,7 @@ function getConfigForHost (): HostConfig {
   }
   for (const widget of config.widgets) {
     if (widget.wmType === 'stash-search') {
-      const stashSearch = widget as widget.StashSearchWidget
+      const stashSearch = widget as StashSearchWidget
       if (!stashSearch.enableHotkeys) continue
 
       for (const entry of stashSearch.entries) {
@@ -666,7 +669,7 @@ function getConfigForHost (): HostConfig {
         })
       }
     } else if (widget.wmType === 'item-search') {
-      const itemSearch = widget as widget.ItemSearchWidget
+      const itemSearch = widget as ItemSearchWidget
       if (itemSearch.ocrGemsKey) {
         actions.push({
           shortcut: itemSearch.ocrGemsKey,
