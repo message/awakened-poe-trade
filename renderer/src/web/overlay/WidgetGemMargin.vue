@@ -55,7 +55,8 @@
 <script setup lang="ts">
 import { computed, inject, nextTick, shallowRef } from 'vue'
 import { useI18nNs } from '@/web/i18n'
-import { ItemSearchWidget, WidgetManager } from './interfaces'
+import { WidgetManager } from './interfaces'
+
 import { usePoeninja } from '@/web/background/Prices'
 import { ITEMS_ITERATOR } from '@/assets/data'
 
@@ -65,6 +66,7 @@ import { ItemFilters } from '@/web/price-check/filters/interfaces'
 import { getTradeEndpoint } from '@/web/price-check/trade/common'
 import { createTradeRequest } from '@/web/price-check/trade/pathofexile-trade'
 import { ItemCategory, ParsedItem } from '@/parser'
+import { ItemSearchWidget } from '@/web/item-search/widget'
 
 interface Gem {
   id: string
