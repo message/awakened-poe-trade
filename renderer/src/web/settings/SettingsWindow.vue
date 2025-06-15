@@ -36,17 +36,18 @@ import { defineComponent, shallowRef, computed, Component, PropType, nextTick, i
 import { useI18n } from 'vue-i18n'
 import { AppConfig, updateConfig, saveConfig, pushHostConfig, Config } from '@/web/Config'
 import { Host } from '@/web/background/IPC'
-import type { Widget, WidgetManager } from '@/web/overlay/interfaces'
+import type { Widget, WidgetManager, WidgetSpec } from '@/web/overlay/interfaces'
+import AppTitleBar from '@/web/ui/AppTitlebar.vue'
 import SettingsHotkeys from './hotkeys.vue'
 import SettingsChat from './chat.vue'
 import SettingsGeneral from './general.vue'
 import SettingsAbout from './about.vue'
-import SettingsPricecheck from './price-check.vue'
+import SettingsPricecheck from '../price-check/settings-price-check.vue'
 import SettingsItemcheck from '../item-check/settings-item-check.vue'
 import SettingsDebug from './debug.vue'
 import SettingsMaps from '../map-check/settings-maps.vue'
 import SettingsStashSearch from '../stash-search/stash-search-editor.vue'
-import SettingsStopwatch from './stopwatch.vue'
+import SettingsStopwatch from '../stopwatch/settings-stopwatch.vue'
 import SettingsItemSearch from '../item-search/settings-item-search.vue'
 
 function quit () {
@@ -57,6 +58,21 @@ function quit () {
 }
 
 export default defineComponent({
+  widget: {
+    type: 'settings',
+    instances: 'single',
+    initInstance: () => {
+      return {
+        wmId: 0,
+        wmType: 'settings',
+        wmTitle: '{icon=fa-cog}',
+        wmWants: 'hide',
+        wmZorder: 'exclusive',
+        wmFlags: ['invisible-on-blur', 'ignore-ui-visibility']
+      }
+    }
+  } satisfies WidgetSpec,
+  components: { AppTitleBar },
   props: {
     config: {
       type: Object as PropType<Widget>,
@@ -90,9 +106,9 @@ export default defineComponent({
     const configWidget = computed(() => configClone.value?.widgets.find(w => w.wmId === selectedWmId.value))
 
     watch(() => props.config.wmFlags, (wmFlags) => {
-      const flagStr = wmFlags.find(flag => flag.startsWith('settings:widget:'))
+      const flagStr = wmFlags.find(flag => flag.startsWith('settings::widget='))
       if (flagStr) {
-        const _wmId = Number(flagStr.split(':')[2])
+        const _wmId = Number(flagStr.split('=')[1])
         const _widget = wm.widgets.value.find(w => w.wmId === _wmId)!
         selectedWmId.value = _wmId
         selectedComponent.value = menuByType(_widget.wmType)[0][0]
@@ -103,10 +119,8 @@ export default defineComponent({
     const menuItems = computed(() => flatJoin(
       menuByType(configWidget.value?.wmType)
         .map(group => group.map(component => ({
-          name: t(component.name),
-          select () {
-            selectedComponent.value = component
-          },
+          name: t(component.name!),
+          select () { selectedComponent.value = component },
           isSelected: (selectedComponent.value === component),
           type: 'menu-item' as const
         }))),

@@ -1,25 +1,25 @@
 <template>
   <div id="overlay-window" class="overflow-hidden relative w-full h-full"
-    :style="{ '--game-panel': poePanelWidth.toFixed(4) + 'px' }">
+       :style="{ '--game-panel': poePanelWidth.toFixed(4) + 'px' }">
     <!-- <div style="border: 4px solid red; top: 0; left: 0; height: 100%; width: 100%; position: absolute;"></div> -->
     <div style="top: 0; left: 0; height: 100%; width: 100%; position: absolute;"
-      :style="{ background: overlayBackground }"
-      @click="handleBackgroundClick"></div>
+         :style="{ background: overlayBackground }"
+         @click="handleBackgroundClick"></div>
     <template v-for="widget of widgets" :key="widget.wmId">
       <component
-        v-show="isVisible(widget.wmId)"
-        :config="widget"
-        :id="`widget-${widget.wmId}`"
-        :is="`widget-${widget.wmType}`" />
+          v-show="isVisible(widget.wmId)"
+          :config="widget"
+          :id="`widget-${widget.wmId}`"
+          :is="registry.getWidgetComponent(widget.wmType)" />
     </template>
     <pre v-if="showLogs"
-      class="widget-default-style p-4 mx-auto mt-6 overflow-hidden"
-      style="max-width: 38rem; z-index: 999; position: absolute; left: 0; right: 0;"
+         class="widget-default-style p-4 mx-auto mt-6 overflow-hidden"
+         style="max-width: 38rem; z-index: 999; position: absolute; left: 0; right: 0;"
     >{{ logs }}</pre>
     <loading-animation />
     <div v-if="showEditingNotification"
-      class="widget-default-style p-6 bg-blue-600 mx-auto text-center text-base mt-6"
-      style="min-width: 30rem; z-index: 998; width: fit-content; position: absolute; left: 0; right: 0;">
+         class="widget-default-style p-6 bg-blue-600 mx-auto text-center text-base mt-6"
+         style="min-width: 30rem; z-index: 998; width: fit-content; position: absolute; left: 0; right: 0;">
       <i18n-t keypath="reopen_settings">
         <span class="bg-blue-800 rounded px-1">{{ overlayKey }}</span>
       </i18n-t>
@@ -35,16 +35,7 @@ import { defineComponent, provide, shallowRef, watch, readonly, computed, onMoun
 import { useI18n } from 'vue-i18n'
 import { Host } from '@/web/background/IPC'
 import { Widget, WidgetManager } from './interfaces'
-import WidgetTimer from './WidgetTimer.vue'
-import WidgetStashSearch from '../stash-search/WidgetStashSearch.vue'
-import WidgetMenu from './WidgetMenu.vue'
-import PriceCheckWindow from '@/web/price-check/PriceCheckWindow.vue'
-import WidgetItemCheck from '@/web/item-check/WidgetItemCheck.vue'
-import WidgetImageStrip from './WidgetImageStrip.vue'
-import WidgetGemMargin from './WidgetGemMargin.vue'
-import WidgetDelveGrid from './WidgetDelveGrid.vue'
-import WidgetItemSearch from '../item-search/WidgetItemSearch.vue'
-import WidgetSettings from '../settings/SettingsWindow.vue'
+import { registry } from './widget-registry.js'
 import { AppConfig, saveConfig, pushHostConfig } from '@/web/Config'
 import LoadingAnimation from './LoadingAnimation.vue'
 // ---
@@ -56,16 +47,6 @@ type WMID = Widget['wmId']
 
 export default defineComponent({
   components: {
-    WidgetTimer,
-    WidgetStashSearch,
-    WidgetMenu,
-    WidgetPriceCheck: PriceCheckWindow,
-    WidgetItemCheck,
-    WidgetImageStrip,
-    WidgetGemMargin,
-    WidgetDelveGrid,
-    WidgetItemSearch,
-    WidgetSettings,
     LoadingAnimation
   },
   setup () {
@@ -222,10 +203,10 @@ export default defineComponent({
       return AppConfig().widgets.map(w => ({
         wmId: w.wmId,
         isVisible:
-          hideUI.value ? (active.value && w.wmWants === 'show' && w.wmFlags.includes('ignore-ui-visibility'))
-            : !active.value && w.wmFlags.includes('invisible-on-blur') ? false
-                : showExclusive ? w === showExclusive
-                  : w.wmWants === 'show'
+            hideUI.value ? (active.value && w.wmWants === 'show' && w.wmFlags.includes('ignore-ui-visibility'))
+              : !active.value && w.wmFlags.includes('invisible-on-blur') ? false
+                  : showExclusive ? w === showExclusive
+                    : w.wmWants === 'show'
       }))
     })
 
@@ -320,7 +301,8 @@ export default defineComponent({
       overlayKey: computed(() => AppConfig().overlayKey),
       get showLogs () { return !active.value && AppConfig().logKeys },
       logs: computed(() => sliceLastLines(Host.logs.value, 11)),
-      showEditingNotification: computed(() => !active.value && showEditingNotification.value)
+      showEditingNotification: computed(() => !active.value && showEditingNotification.value),
+      registry
     }
   }
 })
