@@ -207,6 +207,32 @@ export function createFilters (
     }
   }
 
+  // Add quality filter for base items when quality >= 21
+  if (item.quality && item.quality >= 21 && opts.exact) {
+    // Only add quality filter for items that can be base items
+    // Exclude items that don't typically use base item filtering
+    const isBaseItemCandidate = (
+      item.category !== ItemCategory.Gem &&
+      item.category !== ItemCategory.Currency &&
+      item.category !== ItemCategory.DivinationCard &&
+      item.category !== ItemCategory.Map &&
+      item.category !== ItemCategory.CapturedBeast &&
+      item.category !== ItemCategory.Invitation &&
+      item.category !== ItemCategory.MetamorphSample &&
+      item.category !== ItemCategory.HeistContract &&
+      item.category !== ItemCategory.HeistBlueprint &&
+      item.category !== ItemCategory.Sentinel &&
+      item.category !== ItemCategory.MemoryLine
+    )
+
+    if (isBaseItemCandidate) {
+      filters.quality = {
+        value: item.quality,
+        disabled: false
+      }
+    }
+  }
+
   if (item.sockets?.linked) {
     filters.linkedSockets = {
       value: item.sockets.linked,
