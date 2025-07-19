@@ -138,7 +138,7 @@ export default defineComponent({
     })
 
     const showUnknownMods = computed(() =>
-        props.item.unknownModifiers.length &&
+      props.item.unknownModifiers.length &&
         props.item.category !== ItemCategory.Sentinel &&
         !(props.item.category === ItemCategory.Map && props.item.rarity === ItemRarity.Unique)
     )
@@ -172,7 +172,7 @@ export default defineComponent({
       hiddenStats: computed(() => props.stats.filter(s => s.hidden)),
       showUnknownMods,
       hasStats: computed(() =>
-          props.stats.length ||
+        props.stats.length ||
           (showUnknownMods.value && props.item.rarity === ItemRarity.Unique) ||
           props.presets.length > 1),
       handleStatsSubmit () {

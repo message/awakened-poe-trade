@@ -52,6 +52,33 @@
   </Widget>
 </template>
 
+<script lang="ts">
+import type { WidgetSpec, GemMarginWidget } from './interfaces'
+
+export default {
+  widget: {
+    type: 'gem-margin',
+    instances: 'multi',
+    trNameKey: 'gem_margin.name',
+    initInstance: (): GemMarginWidget => {
+      return {
+        wmId: 0,
+        wmType: 'gem-margin',
+        wmTitle: 'Gem Margin',
+        wmWants: 'hide',
+        wmZorder: null,
+        wmFlags: ['invisible-on-blur'],
+        anchor: {
+          pos: 'tc',
+          x: 50,
+          y: 10
+        }
+      }
+    }
+  } satisfies WidgetSpec
+}
+</script>
+
 <script setup lang="ts">
 import { computed, inject, nextTick, shallowRef } from 'vue'
 import { useI18nNs } from '@/web/i18n'
@@ -66,7 +93,6 @@ import { ItemFilters } from '@/web/price-check/filters/interfaces'
 import { getTradeEndpoint } from '@/web/price-check/trade/common'
 import { createTradeRequest } from '@/web/price-check/trade/pathofexile-trade'
 import { ItemCategory, ParsedItem } from '@/parser'
-import { ItemSearchWidget } from '@/web/item-search/widget'
 
 interface Gem {
   id: string
@@ -83,28 +109,13 @@ interface GemVariants {
 }
 
 const props = defineProps<{
-  config: ItemSearchWidget
+  config: GemMarginWidget
 }>()
 
 const wm = inject<WidgetManager>('wm')!
-if (props.config.wmFlags[0] === 'uninitialized') {
-  props.config.wmFlags = ['invisible-on-blur']
-  props.config.anchor = {
-    pos: 'tc',
-    x: (Math.random() * (60 - 40) + 40),
-    y: (Math.random() * (15 - 5) + 5)
-  }
-  nextTick(() => {
-    wm.show(props.config.wmId)
-  })
-}
 
 const { t } = useI18nNs('gem_margin')
 const { xchgRate, initialLoading, getPricesFor } = usePoeninja()
-
-nextTick(() => {
-  props.config.wmFlags = ['invisible-on-blur']
-})
 
 const isVaal = (name: string) => {
   return name.includes('Vaal ')

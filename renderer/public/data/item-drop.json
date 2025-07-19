@@ -252,6 +252,16 @@
   },
   {
     "query": [
+      "ITEM::Maven's Chisel of Avarice",
+      "ITEM::Maven's Chisel of Divination",
+      "ITEM::Maven's Chisel of Procurement",
+      "ITEM::Maven's Chisel of Proliferation",
+      "ITEM::Maven's Chisel of Scarabs"
+    ],
+    "items": []
+  },
+  {
+    "query": [
       "ITEM::Al-Hezmin's Crest",
       "ITEM::Baran's Crest",
       "ITEM::Veritania's Crest",
