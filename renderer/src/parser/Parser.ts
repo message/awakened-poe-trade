@@ -9,16 +9,16 @@ import {
 } from '@/assets/data'
 import { ModifierType, sumStatsByModType } from './modifiers'
 import { linesToStatStrings, tryParseTranslation, getRollOrMinmaxAvg } from './stat-translations'
-import { ItemCategory } from './meta'
+import { ItemCategory, ACCESSORY } from './meta'
 import { IncursionRoom, ParsedItem, ItemInfluence, ItemRarity } from './ParsedItem'
 import { magicBasetype } from './magic-name'
 import { isModInfoLine, groupLinesByMod, parseModInfoLine, parseModType, ModifierInfo, ParsedModifier, ENCHANT_LINE, SCOURGE_LINE, IMPLICIT_LINE } from './advanced-mod-desc'
 import { calcPropPercentile, QUALITY_STATS } from './calc-q20'
 
 type SectionParseResult =
-  | 'SECTION_PARSED'
-  | 'SECTION_SKIPPED'
-  | 'PARSER_SKIPPED'
+    | 'SECTION_PARSED'
+    | 'SECTION_SKIPPED'
+    | 'PARSER_SKIPPED'
 
 type ParserFn = (section: string[], item: ParserState) => SectionParseResult
 type VirtualParserFn = (item: ParserState) => Result<never, string> | void
@@ -43,7 +43,9 @@ const parsers: Array<ParserFn | { virtual: VirtualParserFn }> = [
   parseGem,
   parseArmour,
   parseWeapon,
+  parseAccessory,
   parseFlask,
+  parseTincture,
   parseStackSize,
   parseCorrupted,
   parseFoil,
@@ -140,7 +142,7 @@ function normalizeName (item: ParserState) {
   }
 
   if (item.rarity === ItemRarity.Normal ||
-      item.rarity === ItemRarity.Rare
+        item.rarity === ItemRarity.Rare
   ) {
     if (item.baseType) {
       if (_$REF.MAP_BLIGHTED.test(item.baseType)) {
@@ -222,7 +224,7 @@ function parseBlightedMap (item: ParsedItem) {
 
   const calc = item.statsByType.find(calc =>
     calc.type === ModifierType.Implicit &&
-    calc.stat.ref.startsWith('Area is infested with Fungal Growths'))
+        calc.stat.ref.startsWith('Area is infested with Fungal Growths'))
   if (calc !== undefined) {
     if (calc.sources[0].contributes!.value === 9) {
       item.mapBlighted = 'Blight-ravaged'
@@ -256,12 +258,12 @@ function pickCorrectVariant (item: ParserState) {
 
     if (cond.hasImplicit && !item.statsByType.some(calc =>
       calc.type === ModifierType.Implicit &&
-      calc.stat.ref === cond.hasImplicit!.ref)
+            calc.stat.ref === cond.hasImplicit!.ref)
     ) continue
 
     if (cond.hasExplicit && !item.statsByType.some(calc =>
       calc.type === ModifierType.Explicit &&
-      calc.stat.ref === cond.hasExplicit!.ref)
+            calc.stat.ref === cond.hasExplicit!.ref)
     ) continue
 
     if (cond.sectionText && !item.rawText.includes(cond.sectionText)) continue
@@ -299,8 +301,8 @@ function parseNamePlate (section: string[]) {
   const item: ParserState = {
     rarity: undefined,
     category: undefined,
-    name: name,
-    baseType: baseType,
+    name,
+    baseType,
     isUnidentified: false,
     isCorrupted: false,
     newMods: [],
@@ -455,8 +457,8 @@ function parseGem (section: string[], item: ParsedItem) {
 
 function parseStackSize (section: string[], item: ParsedItem) {
   if (item.rarity !== ItemRarity.Normal &&
-      item.category !== ItemCategory.Currency &&
-      item.category !== ItemCategory.DivinationCard) {
+        item.category !== ItemCategory.Currency &&
+        item.category !== ItemCategory.DivinationCard) {
     return 'PARSER_SKIPPED'
   }
   if (section[0].startsWith(_$.STACK_SIZE)) {
@@ -483,8 +485,8 @@ function parseSockets (section: string[], item: ParsedItem) {
       item.sockets.linked = 6
     } else if (
       sockets === '# #-#-#-#-#' ||
-      sockets === '#-#-#-#-# #' ||
-      sockets === '#-#-#-#-#'
+            sockets === '#-#-#-#-# #' ||
+            sockets === '#-#-#-#-#'
     ) {
       item.sockets.linked = 5
     }
@@ -493,14 +495,25 @@ function parseSockets (section: string[], item: ParsedItem) {
   return 'SECTION_SKIPPED'
 }
 
-function parseQualityNested (section: string[], item: ParsedItem) {
+function parseQualityNested (section: string[], item: ParsedItem): boolean {
   for (const line of section) {
     if (line.startsWith(_$.QUALITY)) {
       // "Quality: +20% (augmented)"
       item.quality = parseInt(line.slice(_$.QUALITY.length), 10)
-      break
+      return true
     }
   }
+  return false
+}
+
+function parseMemoryStrandsNested (section: string[], item: ParsedItem): boolean {
+  for (const line of section) {
+    if (line.startsWith(_$.MEMORY_STRANDS)) {
+      item.memoryStrands = parseInt(line.slice(_$.MEMORY_STRANDS.length), 10)
+      return true
+    }
+  }
+  return false
 }
 
 function parseArmour (section: string[], item: ParsedItem) {
@@ -531,6 +544,7 @@ function parseArmour (section: string[], item: ParsedItem) {
 
   if (isParsed === 'SECTION_PARSED') {
     parseQualityNested(section, item)
+    parseMemoryStrandsNested(section, item)
   }
 
   return isParsed
@@ -557,10 +571,10 @@ function parseWeapon (section: string[], item: ParsedItem) {
     }
     if (line.startsWith(_$.ELEMENTAL_DAMAGE)) {
       item.weaponELEMENTAL =
-        line.slice(_$.ELEMENTAL_DAMAGE.length)
-          .split(', ')
-          .map(element => getRollOrMinmaxAvg(element.split('-').map(str => parseInt(str, 10))))
-          .reduce((sum, x) => sum + x, 0)
+                line.slice(_$.ELEMENTAL_DAMAGE.length)
+                  .split(', ')
+                  .map(element => getRollOrMinmaxAvg(element.split('-').map(str => parseInt(str, 10))))
+                  .reduce((sum, x) => sum + x, 0)
 
       isParsed = 'SECTION_PARSED'; continue
     }
@@ -568,9 +582,20 @@ function parseWeapon (section: string[], item: ParsedItem) {
 
   if (isParsed === 'SECTION_PARSED') {
     parseQualityNested(section, item)
+    parseMemoryStrandsNested(section, item)
   }
 
   return isParsed
+}
+
+function parseAccessory (section: string[], item: ParsedItem) {
+  if (!item.category || !ACCESSORY.has(item.category)) return 'PARSER_SKIPPED'
+
+  if (parseMemoryStrandsNested(section, item)) {
+    return 'SECTION_PARSED'
+  }
+
+  return 'SECTION_SKIPPED'
 }
 
 function parseLogbookArea (section: string[], item: ParsedItem) {
@@ -620,17 +645,17 @@ function parseLogbookArea (section: string[], item: ParsedItem) {
 function parseModifiers (section: string[], item: ParsedItem) {
   if (
     item.rarity !== ItemRarity.Normal &&
-    item.rarity !== ItemRarity.Magic &&
-    item.rarity !== ItemRarity.Rare &&
-    item.rarity !== ItemRarity.Unique
+        item.rarity !== ItemRarity.Magic &&
+        item.rarity !== ItemRarity.Rare &&
+        item.rarity !== ItemRarity.Unique
   ) {
     return 'PARSER_SKIPPED'
   }
 
   const recognizedLine = section.find(line =>
     line.endsWith(ENCHANT_LINE) ||
-    line.endsWith(SCOURGE_LINE) ||
-    isModInfoLine(line)
+        line.endsWith(SCOURGE_LINE) ||
+        isModInfoLine(line)
   )
 
   if (!recognizedLine) {
@@ -672,6 +697,8 @@ function parseMirrored (section: string[], item: ParsedItem) {
 }
 
 function parseFlask (section: string[], item: ParsedItem) {
+  if (item.category !== ItemCategory.Flask) return 'PARSER_SKIPPED'
+
   // the purpose of this parser is to "consume" flask buffs
   // so they are not recognized as modifiers
 
@@ -683,11 +710,21 @@ function parseFlask (section: string[], item: ParsedItem) {
     }
   }
 
-  if (isParsed) {
+  if (isParsed === 'SECTION_PARSED') {
     parseQualityNested(section, item)
   }
 
   return isParsed
+}
+
+function parseTincture (section: string[], item: ParsedItem) {
+  if (item.category !== ItemCategory.Tincture) return 'PARSER_SKIPPED'
+
+  if (parseQualityNested(section, item)) {
+    return 'SECTION_PARSED'
+  }
+
+  return 'SECTION_SKIPPED'
 }
 
 function parseSentinelCharge (section: string[], item: ParsedItem) {
@@ -721,9 +758,9 @@ function parseSynthesised (section: string[], item: ParserState) {
 function parseSuperior (item: ParserState) {
   if (
     (item.rarity === ItemRarity.Normal) ||
-    (item.rarity === ItemRarity.Magic && item.isUnidentified) ||
-    (item.rarity === ItemRarity.Rare && item.isUnidentified) ||
-    (item.rarity === ItemRarity.Unique && item.isUnidentified)
+        (item.rarity === ItemRarity.Magic && item.isUnidentified) ||
+        (item.rarity === ItemRarity.Rare && item.isUnidentified) ||
+        (item.rarity === ItemRarity.Unique && item.isUnidentified)
   ) {
     if (_$REF.ITEM_SUPERIOR.test(item.name)) {
       item.name = _$REF.ITEM_SUPERIOR.exec(item.name)![1]
@@ -791,9 +828,9 @@ function parseAreaLevelNested (section: string[], item: ParsedItem) {
 function parseAreaLevel (section: string[], item: ParsedItem) {
   if (
     item.info.refName !== 'Chronicle of Atzoatl' &&
-    item.info.refName !== 'Expedition Logbook' &&
-    item.info.refName !== 'Mirrored Tablet' &&
-    item.info.refName !== 'Forbidden Tome'
+        item.info.refName !== 'Expedition Logbook' &&
+        item.info.refName !== 'Mirrored Tablet' &&
+        item.info.refName !== 'Forbidden Tome'
   ) return 'PARSER_SKIPPED'
 
   parseAreaLevelNested(section, item)
@@ -896,6 +933,7 @@ function markupConditionParser (text: string) {
 
 function parseStatsFromMod (lines: string[], item: ParsedItem, modifier: ParsedModifier) {
   item.newMods.push(modifier)
+
   if (modifier.info.type === ModifierType.Veiled) {
     const found = STAT_BY_MATCH_STR(modifier.info.name!)
     if (found) {
@@ -916,7 +954,7 @@ function parseStatsFromMod (lines: string[], item: ParsedItem, modifier: ParsedM
   const statIterator = linesToStatStrings(lines)
   let stat = statIterator.next()
   while (!stat.done) {
-    const parsedStat = tryParseTranslation(stat.value, modifier)
+    const parsedStat = tryParseTranslation(stat.value, modifier.info.type, item.category)
     if (parsedStat) {
       modifier.stats.push(parsedStat)
       stat = statIterator.next(true)
