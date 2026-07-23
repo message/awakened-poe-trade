@@ -95,12 +95,15 @@
       "ITEM::Mortal Grief"
     ],
     "items": [
-      "UNIQUE::Atziri's Acuity // Vaal Gauntlets",
+      "UNIQUE::Beauty // Vaal Aspect",
       "UNIQUE::Atziri's Disfavour // Vaal Axe",
+      "UNIQUE::Atziri's Reflection // Golden Buckler",
+      "UNIQUE::Atziri's Acuity // Vaal Gauntlets",
       "UNIQUE::The Vertex // Vaal Mask",
       "UNIQUE::Atziri's Splendour // ES, Sacrificial Garb",
       "UNIQUE::Atziri's Splendour // Evasion/ES/Life, Sacrificial Garb",
-      "UNIQUE::Beauty // Vaal Aspect",
+      "UNIQUE::Atziri's Rule // Judgement Staff",
+      "UNIQUE::Triumvirate Authority // Unset Ring",
       "DIVINATION_CARD::Alluring Bounty",
       "DIVINATION_CARD::House of Mirrors"
     ]
@@ -295,6 +298,40 @@
       "UNIQUE::Bitterbind Point // Titanium Spirit Shield",
       "UNIQUE::The Queen's Hunger // Vaal Regalia",
       "UNIQUE::Cane of Kulemak // Serpentine Staff"
+    ]
+  },
+  {
+    "query": [
+      "ITEM::Scrap Metal"
+    ],
+    "items": [
+      "UNIQUE::Starlight Chalice // Iron Flask"
+    ]
+  },
+  {
+    "query": [
+      "ITEM::Exotic Coinage"
+    ],
+    "items": [
+      "UNIQUE::Vorana's Preparation // Iron Flask"
+    ]
+  },
+  {
+    "query": [
+      "ITEM::Astragali"
+    ],
+    "items": [
+      "UNIQUE::Elixir of the Unbroken Circle // Iron Flask"
+    ]
+  },
+  {
+    "query": [
+      "ITEM::Burial Medallion"
+    ],
+    "items": [
+      "UNIQUE::Olroth's Resolve // Iron Flask",
+      "UNIQUE::Cadigan's Crown // Runic Crown",
+      "UNIQUE::Vorana's March // Runic Sabatons"
     ]
   },
   {
@@ -717,7 +754,6 @@
   {
     "query": [
       "ITEM::Ancient Orb",
-      "ITEM::Astragali",
       "ITEM::Voidborn Reliquary Key",
       "ITEM::Valdo's Puzzle Box"
     ],
