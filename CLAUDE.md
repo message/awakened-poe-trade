@@ -17,28 +17,28 @@ Both parts are interdependent and communicate via WebSocket through a local HTTP
 ```bash
 # From renderer directory
 cd renderer
-yarn install
-yarn make-index-files  # Must run before dev or build - generates binary index files
-yarn dev
+npm install
+npm run make-index-files  # Must run before dev or build - generates binary index files
+npm run dev
 
 # In a second shell - from main directory
 cd main
-yarn install
-yarn dev
+npm install
+npm run dev
 ```
 
 ### Building
 ```bash
 # From renderer directory
 cd renderer
-yarn build
+npm run build
 
 # From main directory
 cd main
-yarn build
+npm run build
 
 # Package with code signing (optional)
-CSC_NAME="Certificate name in Keychain" yarn package
+CSC_NAME="Certificate name in Keychain" npm run package
 ```
 
 ### Other Commands
@@ -47,7 +47,7 @@ CSC_NAME="Certificate name in Keychain" yarn package
 vue-tsc --noEmit
 
 # Linting (renderer)
-yarn lint
+npm run lint
 ```
 
 ## Architecture
@@ -70,7 +70,7 @@ Key communication pattern:
 ### Data Management
 
 #### Asset Processing
-Before building or running dev, `yarn make-index-files` must be run to generate binary index files from NDJSON data:
+Before building or running dev, `npm run make-index-files` must be run to generate binary index files from NDJSON data:
 
 - **Input**: `public/data/{lang}/stats.ndjson` and `items.ndjson` files
 - **Output**: Binary `.index.bin` files using FNV-1a hashing for fast lookups
@@ -157,7 +157,7 @@ Both main and renderer use TypeScript path aliases:
   - Target: `esnext` (Chrome 101+)
   - Dev server proxies `/config`, `/uploads`, `/proxy` to localhost:8584
 - **Main**: esbuild via custom build script (`main/build/script.mjs`)
-  - Electron 39.2.0
+  - Electron 40.10.6
   - Uses `electron-builder` for packaging
 
 ## Working with Filters
