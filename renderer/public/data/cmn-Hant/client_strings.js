@@ -123,6 +123,9 @@ export default {
   UNMODIFIABLE: '不可調整的',
   FOULBORN_NAME: /^穢生 (.*)$/,
   FOULBORN_MODIFIER: 'Foulborn Unique Modifier',
+  VESTIGIAL_NAME: /^殘存 (.*)$/,
+  VESTIGIAL_IMPLICIT: '殘存固定詞綴',
+  SCRYING_MAP_AREA: '地圖區域: ',
   // ---
   CHAT_SYSTEM: /^: (?<body>.+)$/,
   CHAT_TRADE: /^\$(?:<(?<guild_tag>.+?)> )?(?<char_name>.+?): (?<body>.+)$/,

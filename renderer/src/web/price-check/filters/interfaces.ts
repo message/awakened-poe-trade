@@ -53,6 +53,9 @@ export interface ItemFilters {
   foulborn?: {
     value: boolean
   }
+  vestigial?: {
+    value: boolean
+  }
   influences?: Array<{
     value: ItemInfluence
     disabled: boolean
@@ -67,6 +70,7 @@ export interface ItemFilters {
     name: string
     nameTrade: string
   }
+  scryingMapArea?: string
   itemLevel?: FilterNumeric
   stackSize?: FilterNumeric
   unidentified?: {
@@ -172,6 +176,7 @@ export enum FilterTag {
   Corrupted = 'corrupted',
   Synthesised = 'synthesised',
   Foulborn = 'foulborn',
+  Vestigial = 'vestigial',
   Eldritch = 'eldritch',
   Variant = 'variant',
   Property = 'property',
