@@ -21,7 +21,11 @@ export class ConfigStore {
     let contents: string | null = null
     try {
       contents = await fs.readFile(this.cfgPath, 'utf8')
-    } catch {}
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException)?.code !== 'ENOENT') {
+        console.error(`[ConfigStore] failed to read ${this.cfgPath}: ${(err as Error)?.stack ?? err}`)
+      }
+    }
     return contents
   }
 

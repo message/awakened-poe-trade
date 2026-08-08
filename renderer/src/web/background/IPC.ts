@@ -54,7 +54,17 @@ class HostTransport {
 
   async getConfig (): Promise<string | null> {
     const response = await fetch('/config')
-    const config = await response.json() as HostState
+    const text = await response.text()
+    let config: HostState
+    try {
+      config = JSON.parse(text) as HostState
+    } catch (err) {
+      console.error(
+        `[IPC] GET /config returned invalid JSON (status ${response.status}): ${text.slice(0, 500)}`,
+        err
+      )
+      throw err
+    }
     // TODO: refactor this
     this.version.value = config.version
     this.updateInfo.value = config.updater

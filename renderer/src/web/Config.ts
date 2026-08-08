@@ -66,7 +66,8 @@ export async function initConfig () {
   let config: Config
   try {
     config = JSON.parse(contents)
-  } catch {
+  } catch (err) {
+    console.error(`[Config] failed to parse saved config.json, resetting to defaults: ${contents.slice(0, 1000)}`, err)
     updateConfig(defaultConfig())
     saveConfig({ isTemporary: true })
     return

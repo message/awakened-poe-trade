@@ -49,7 +49,12 @@ function ndjsonFindLines<T> (ndjson: string) {
       const end = ndjson.indexOf('\n', matchPos)
       const jsonLine = ndjson.slice(start, end)
       if (andIncludes.every(str => jsonLine.includes(str))) {
-        yield JSON.parse(jsonLine) as T
+        try {
+          yield JSON.parse(jsonLine) as T
+        } catch (err) {
+          console.error(`[data] malformed ndjson line at offset ${start}: ${jsonLine.slice(0, 300)}`, err)
+          throw err
+        }
       }
       start = end + 1
     }
@@ -88,7 +93,16 @@ async function loadItems (language: string) {
       const out: BaseType[] = []
       while (start !== ndjson.length) {
         const end = ndjson.indexOf('\n', start)
-        const record = JSON.parse(ndjson.slice(start, end)) as BaseType
+        let record: BaseType
+        try {
+          record = JSON.parse(ndjson.slice(start, end)) as BaseType
+        } catch (err) {
+          console.error(
+            `[data] items.ndjson (${language}) desynced from items-${prop === 'name' ? 'name' : 'ref'}.index.bin at offset ${start} (looking up ${ns}::${name}): ${ndjson.slice(start, end).slice(0, 300)}`,
+            err
+          )
+          throw err
+        }
         if (record.namespace === ns && record[prop] === name) {
           out.push(record)
           if (!record.disc && !record.unique) break
@@ -117,7 +131,12 @@ async function loadStats (language: string) {
     if (start === -1) return undefined
     start = indexRef[start * INDEX_WIDTH + 1]
     const end = ndjson.indexOf('\n', start)
-    return JSON.parse(ndjson.slice(start, end))
+    try {
+      return JSON.parse(ndjson.slice(start, end))
+    } catch (err) {
+      console.error(`[data] stats.ndjson (${language}) desynced from stats-ref.index.bin at offset ${start} (ref: ${ref}): ${ndjson.slice(start, end).slice(0, 300)}`, err)
+      throw err
+    }
   }
 
   STAT_BY_MATCH_STR_V2 = function (matchStr: string) {
@@ -125,7 +144,13 @@ async function loadStats (language: string) {
     if (start === -1) return undefined
     start = indexMatcher[start * INDEX_WIDTH + 1]
     const end = ndjson.indexOf('\n', start)
-    const statOrGroup = JSON.parse(ndjson.slice(start, end)) as StatOrGroup
+    let statOrGroup: StatOrGroup
+    try {
+      statOrGroup = JSON.parse(ndjson.slice(start, end)) as StatOrGroup
+    } catch (err) {
+      console.error(`[data] stats.ndjson (${language}) desynced from stats-matcher.index.bin at offset ${start} (matchStr: ${matchStr}): ${ndjson.slice(start, end).slice(0, 300)}`, err)
+      throw err
+    }
     const stats = ('stats' in statOrGroup) ? statOrGroup.stats : [statOrGroup]
     if (!stats.some(stat =>
       stat.matchers.some(m => m.string === matchStr || m.advanced === matchStr))

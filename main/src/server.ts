@@ -105,13 +105,26 @@ export async function startServer (
 
   server.addListener('request', async (req, res) => {
     if (req.url === '/config') {
-      res.setHeader('content-type', 'application/json')
-      const resBody: HostState = {
-        version: app.getVersion(),
-        updater: appUpdater.info,
-        contents: await configStore.load()
+      try {
+        const contents = await configStore.load()
+        const resBody: HostState = {
+          version: app.getVersion(),
+          updater: appUpdater.info,
+          contents
+        }
+        const json = JSON.stringify(resBody)
+        res.setHeader('content-type', 'application/json')
+        res.end(json)
+      } catch (err) {
+        const message = `[server] GET /config failed: ${(err as Error)?.stack ?? err}`
+        console.error(message)
+        logger.write(message)
+        if (!res.headersSent) {
+          res.statusCode = 500
+          res.setHeader('content-type', 'application/json')
+        }
+        res.end(JSON.stringify({ error: String(err) }))
       }
-      res.end(JSON.stringify(resBody))
     }
   })
 
