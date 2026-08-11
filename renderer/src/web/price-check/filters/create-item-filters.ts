@@ -34,16 +34,19 @@ export function createFilters (
       listed: undefined,
       currency: opts.currency,
       league: opts.league,
-      collapseListings: opts.collapseListings
+      collapseListings: opts.collapseListings,
+      collapseMerchant: false
     }
   }
 
-  if (!opts.currency) {
-    if ((!item.info.craftable || CONSUMABLE_CRAFTABLE_ITEM.has(item.category!)) &&
-      item.rarity !== ItemRarity.Unique
-    ) {
+  if (
+    (!item.info.craftable || CONSUMABLE_CRAFTABLE_ITEM.has(item.category!)) &&
+    item.rarity !== ItemRarity.Unique
+  ) {
+    if (!opts.currency) {
       filters.trade.currency = 'chaos_divine'
     }
+    filters.trade.collapseMerchant = true
   }
 
   if (item.category === ItemCategory.Gem) {
@@ -83,10 +86,8 @@ export function createFilters (
   if (item.info.refName === 'Scrying Orb') {
     filters.searchExact = {
       baseType: item.info.name,
-      baseTypeTrade: item.mapArea!.tradeDisc!
-    }
-    filters.discriminator = {
-      trade: item.info.tradeDisc!
+      baseTypeTrade: item.mapArea!.tradeDisc!,
+      discriminatorTrade: item.info.tradeDisc!
     }
     filters.scryingMapArea = item.mapArea!.name
 
@@ -144,7 +145,7 @@ export function createFilters (
     }
 
     if (item.info.refName === 'Map' || item.info.unique?.base === 'Map') {
-      filters.discriminator = { trade: 'map' }
+      filters.searchExact.discriminatorTrade = 'map'
     }
 
     if (item.mapBlighted) {
@@ -158,9 +159,9 @@ export function createFilters (
       }
     }
 
-    if (item.map!.tier) {
+    if (item.mapTier) {
       filters.mapTier = {
-        value: item.map!.tier,
+        value: item.mapTier,
         disabled: false
       }
     }
@@ -172,6 +173,21 @@ export function createFilters (
     filters.areaLevel = {
       value: floorToBracket(item.areaLevel!, [1, 68, 73, 78, 81, 83]),
       disabled: false
+    }
+  } else if (item.category === ItemCategory.Chart) {
+    filters.searchExact = {
+      baseType: item.info.name,
+      baseTypeTrade: t(opts, item.info)
+    }
+    filters.searchRelaxed = {
+      category: item.category,
+      disabled: false,
+      sub: {
+        baseType: item.mapArea!.name,
+        baseTypeTrade: item.mapArea!.tradeDisc!,
+        discriminatorTrade: item.info.tradeDisc!,
+        disabled: false
+      }
     }
   } else if (item.category === ItemCategory.HeistBlueprint) {
     filters.searchRelaxed = {
@@ -338,6 +354,7 @@ export function createFilters (
       item.category !== ItemCategory.Jewel && /* https://pathofexile.gamepedia.com/Jewel#Affixes */
       item.category !== ItemCategory.HeistBlueprint &&
       item.category !== ItemCategory.HeistContract &&
+      item.category !== ItemCategory.Chart &&
       item.category !== ItemCategory.MemoryLine &&
       item.category !== ItemCategory.SanctumRelic &&
       item.category !== ItemCategory.Charm &&
@@ -417,7 +434,10 @@ export function createFilters (
     }
   }
 
-  if (item.category === ItemCategory.HeistContract) {
+  if (
+    item.category === ItemCategory.HeistContract ||
+    item.category === ItemCategory.Chart
+  ) {
     if (item.rarity !== ItemRarity.Unique) {
       filters.areaLevel = {
         value: item.areaLevel!,
@@ -443,10 +463,8 @@ function createGemFilters (
     const normalGem = ITEM_BY_REF('GEM', item.info.gem!.normalVariant!)![0]
     filters.searchExact = {
       baseType: item.info.name,
-      baseTypeTrade: t(opts, normalGem)
-    }
-    filters.discriminator = {
-      trade: item.info.tradeDisc!
+      baseTypeTrade: t(opts, normalGem),
+      discriminatorTrade: item.info.tradeDisc!
     }
   }
 

@@ -127,7 +127,8 @@ export default defineComponent({
       } else {
         doSearch.value = Boolean(
           (item.rarity === ItemRarity.Unique) ||
-          (item.category === ItemCategory.Map) ||
+          (presets.value.active === 'filters.preset_bulk') ||
+          (item.mapCompletionReward) ||
           (item.category === ItemCategory.HeistContract) ||
           (item.category === ItemCategory.HeistBlueprint) ||
           (item.category === ItemCategory.SanctumRelic) ||
@@ -188,6 +189,7 @@ export default defineComponent({
         props.item.category !== ItemCategory.CapturedBeast &&
         props.item.category !== ItemCategory.HeistContract &&
         props.item.category !== ItemCategory.HeistBlueprint &&
+        props.item.category !== ItemCategory.Chart &&
         props.item.category !== ItemCategory.Invitation &&
         props.item.info.refName !== 'Expedition Logbook' &&
         !props.item.isUnidentified

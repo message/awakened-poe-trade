@@ -13,16 +13,17 @@ interface SearchFilter {
   nameTrade?: string
   baseType?: string
   baseTypeTrade?: string
+  discriminatorTrade?: string
   category?: ItemCategory
 }
 
+interface SearchFilterSub extends SearchFilter {
+  sub?: SearchFilter & { disabled: boolean }
+}
+
 export interface ItemFilters {
-  searchExact: SearchFilter
-  searchRelaxed?: SearchFilter & { disabled: boolean }
-  discriminator?: {
-    value?: string
-    trade: string
-  }
+  searchExact: SearchFilterSub
+  searchRelaxed?: SearchFilterSub & { disabled: boolean }
   rarity?: {
     value: string
     disabled: boolean
@@ -92,6 +93,7 @@ export interface ItemFilters {
     currency: string | undefined
     league: string
     collapseListings: 'api' | 'app'
+    collapseMerchant: boolean
   }
 }
 
@@ -153,7 +155,8 @@ const _INTERNAL_TRADE_IDS = [
   'item.heist_job_agility',
   'item.heist_job_deception',
   'item.heist_job_engineering',
-  'item.heist_target_priceless'
+  'item.heist_target_priceless',
+  'item.chart_sulphur'
 ] as const
 
 export type InternalTradeId = typeof _INTERNAL_TRADE_IDS[number]
