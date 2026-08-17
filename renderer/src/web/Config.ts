@@ -124,7 +124,7 @@ export interface Config {
 }
 
 export const defaultConfig = (): Config => ({
-  configVersion: 18,
+  configVersion: 19,
   overlayKey: 'Shift + Space',
   overlayBackground: 'rgba(129, 139, 149, 0.15)',
   overlayBackgroundClose: true,
@@ -432,6 +432,15 @@ function upgradeConfig (_config: Config): Config {
     config.useIntlSite = (config.language === 'cmn-Hant' && config.realm === 'pc-ggg')
 
     config.configVersion = 18
+  }
+
+  if (config.configVersion < 19) {
+    config.widgets.push({
+      ...defaultConfig().widgets.find(w => w.wmType === 'gem-corruption')!,
+      wmId: Math.max(0, ...config.widgets.map(_ => _.wmId)) + 1
+    })
+
+    config.configVersion = 19
   }
   /* eslint-enable */
 

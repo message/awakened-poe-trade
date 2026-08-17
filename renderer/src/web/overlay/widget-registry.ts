@@ -8,6 +8,7 @@ import WidgetItemCheck from '@/web/item-check/WidgetItemCheck.vue'
 import WidgetImageStrip from './WidgetImageStrip.vue'
 import WidgetDelveGrid from './WidgetDelveGrid.vue'
 import WidgetItemSearch from '../item-search/WidgetItemSearch.vue'
+import WidgetGemCorruption from '../gem-corruption/WidgetGemCorruption.vue'
 import WidgetSettings from '../settings/SettingsWindow.vue'
 
 type WidgetComponent = Component & { widget: WidgetSpec }
@@ -25,6 +26,7 @@ registry.widgets.push(WidgetMenu as unknown as WidgetComponent)
 registry.widgets.push(WidgetSettings as unknown as WidgetComponent)
 // Extra
 registry.widgets.push(WidgetItemSearch as unknown as WidgetComponent)
+registry.widgets.push(WidgetGemCorruption as unknown as WidgetComponent)
 registry.widgets.push(WidgetTimer as unknown as WidgetComponent)
 registry.widgets.push(WidgetStashSearch as unknown as WidgetComponent)
 registry.widgets.push(PriceCheckWindow as unknown as WidgetComponent)

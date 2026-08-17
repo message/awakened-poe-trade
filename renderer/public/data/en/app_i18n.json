@@ -282,6 +282,22 @@
     "not_found": "No items found.",
     "ocr_gems_key": "Perform an OCR for a Skill Gem"
   },
+  "gem_corruption": {
+    "name": "Gem corruption",
+    "filter": "Filter by name…",
+    "transfigured": "Transfigured",
+    "awakened": "Awakened",
+    "unconfirmed": "Unconfirmed prices",
+    "filters_hint": "Filters",
+    "tag_transfigured": "Transfigured",
+    "tag_awakened": "Awakened",
+    "loading": "Waiting for poe.ninja prices…",
+    "buy": "Buy",
+    "sell": "Sell",
+    "buy_hint": "Click to price check the uncorrupted gem",
+    "sell_hint": "Click to browse corrupted listings of this gem",
+    "via_gemcutter_hint": "Priced as a 0% quality gem + 20x Gemcutter's Prism, cheaper than buying 20/20 outright"
+  },
   "map_check": {
     "name": "Map check",
     "has_outdated": "Wording of some stats has been changed. Check and update dangerous map mods in the settings. (This message will be hidden as soon as you remove all outdated stats)",

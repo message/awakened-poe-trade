@@ -92,4 +92,27 @@ export default defineComponent({
 .tippy-content {
   @apply p-1;
 }
+
+/* the stock "light" tippy theme assumes a white UI - override it to match this app's dark theme */
+.tippy-box[data-theme~='light'] {
+  @apply bg-gray-900;
+  @apply text-gray-100;
+  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.5);
+}
+
+.tippy-box[data-theme~='light'][data-placement^='top'] > .tippy-arrow::before {
+  border-top-color: theme('colors.gray.900');
+}
+
+.tippy-box[data-theme~='light'][data-placement^='bottom'] > .tippy-arrow::before {
+  border-bottom-color: theme('colors.gray.900');
+}
+
+.tippy-box[data-theme~='light'][data-placement^='left'] > .tippy-arrow::before {
+  border-left-color: theme('colors.gray.900');
+}
+
+.tippy-box[data-theme~='light'][data-placement^='right'] > .tippy-arrow::before {
+  border-right-color: theme('colors.gray.900');
+}
 </style>
