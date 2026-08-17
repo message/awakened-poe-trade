@@ -4,20 +4,6 @@
       <div :class="$style.toolbar">
         <input type="text" :placeholder="t(':filter')" :class="$style.filterInput"
           v-model="filterValue">
-        <ui-popover placement="bottom-end" :delay="[80, null]">
-          <template #target>
-            <button :class="[$style.filterBtn, { [$style.filterBtnActive]: hasActiveFilters }]" :title="t(':filters_hint')">
-              <i class="fas fa-sliders"></i>
-            </button>
-          </template>
-          <template #content>
-            <div class="flex flex-col gap-y-1 p-2 bg-gray-800 text-gray-400">
-              <ui-toggle v-model="config.includeTransfigured">{{ t(':transfigured') }}</ui-toggle>
-              <ui-toggle v-model="config.includeAwakened">{{ t(':awakened') }}</ui-toggle>
-              <ui-toggle v-model="config.includeUnconfirmed">{{ t(':unconfirmed') }}</ui-toggle>
-            </div>
-          </template>
-        </ui-popover>
       </div>
       <div class="flex flex-col gap-y-1">
         <div v-for="row in pageRows" :key="row.gem.refName" :class="$style.row">
@@ -25,8 +11,6 @@
           <div class="flex flex-col flex-1 min-w-0">
             <div :class="$style.name">
               <span class="truncate">{{ row.gem.name }}</span>
-              <span v-if="row.gem.gem?.transfigured" :class="$style.tag">{{ t(':tag_transfigured') }}</span>
-              <span v-else-if="isAwakened(row.gem)" :class="$style.tag">{{ t(':tag_awakened') }}</span>
             </div>
             <div :class="$style.actions">
               <button :class="$style.actionBtn" :title="t(':buy_hint')"
@@ -43,15 +27,18 @@
                 <span :class="$style.value">{{ fmt(row.sellPrice).text }}
                   <img :src="fmt(row.sellPrice).icon" :class="$style.currencyIcon">
                   <span :class="row.profit >= 0 ? $style.profitPositive : $style.profitNegative">
-                    ({{ row.profit >= 0 ? '+' : '' }}{{ fmt(row.profit).text }}, {{ (row.profitMargin * 100).toFixed(0) }}%)
+                    ({{ row.profit >= 0 ? '+' : '' }}{{ fmt(row.profit).text }}, {{ (row.profitMargin * 100).toFixed(0) }}%, {{ sellBuyRatio(row).toFixed(1) }}x)
                   </span>
                 </span>
               </button>
             </div>
           </div>
         </div>
-        <div v-if="!rows.length" :class="$style.searchMessage">
+        <div v-if="!results.length" :class="$style.searchMessage">
           <i class="fas fa-spinner fa-spin" /> {{ t(':loading') }}
+        </div>
+        <div v-else-if="!rows.length" :class="$style.searchMessage">
+          {{ t(':no_matches') }}
         </div>
       </div>
       <div v-if="totalPages > 1" class="flex items-center justify-center gap-x-3 py-1">
@@ -90,7 +77,8 @@ export default {
         },
         includeTransfigured: true,
         includeAwakened: true,
-        includeUnconfirmed: true
+        includeUnconfirmed: true,
+        minProfitMultiple: 7
       }
     }
   } satisfies WidgetSpec
@@ -108,8 +96,6 @@ import { ItemCategory } from '@/parser'
 import { ITEM_BY_REF, type BaseType } from '@/assets/data'
 import { computeCorruptionEv, gemCorruptionCandidates, type CorruptionResult } from './calc'
 
-import UiToggle from '@/web/ui/UiToggle.vue'
-import UiPopover from '@/web/ui/Popover.vue'
 import Widget from '../overlay/Widget.vue'
 
 const props = defineProps<{
@@ -136,7 +122,7 @@ function recompute () {
     const result = computeCorruptionEv(gem, { findPriceByQuery })
     if (result) out.push(result)
   }
-  out.sort((a, b) => b.profitMargin - a.profitMargin)
+  out.sort((a, b) => b.profit - a.profit)
   results.value = out
 }
 
@@ -152,9 +138,8 @@ function isAwakened (gem: BaseType) {
   return gem.refName.startsWith('Awakened ')
 }
 
-const hasActiveFilters = computed(() =>
-  !props.config.includeTransfigured || !props.config.includeAwakened || !props.config.includeUnconfirmed
-)
+// old saved widget configs predate this field and won't have it set
+const minProfitMultiple = computed(() => props.config.minProfitMultiple || 7)
 
 const rows = computed(() => {
   const search = filterValue.value.trim().toLowerCase()
@@ -163,6 +148,7 @@ const rows = computed(() => {
     if (gem.gem?.transfigured && !props.config.includeTransfigured) return false
     if (isAwakened(gem) && !props.config.includeAwakened) return false
     if (row.missing.length > 0 && !props.config.includeUnconfirmed) return false
+    if (row.sellPrice / row.baselineCost < minProfitMultiple.value) return false
     if (search && !gem.name.toLowerCase().includes(search)) return false
     return true
   })
@@ -170,7 +156,7 @@ const rows = computed(() => {
 
 const totalPages = computed(() => Math.max(1, Math.ceil(rows.value.length / PAGE_SIZE)))
 
-watch([filterValue, () => props.config.includeTransfigured, () => props.config.includeAwakened, () => props.config.includeUnconfirmed], () => {
+watch([filterValue, () => props.config.includeTransfigured, () => props.config.includeAwakened, () => props.config.includeUnconfirmed, minProfitMultiple], () => {
   page.value = 0
 })
 
@@ -185,6 +171,10 @@ function fmt (value: number) {
     text: displayRounding(value),
     icon: '/images/chaos.png'
   }
+}
+
+function sellBuyRatio (row: CorruptionResult) {
+  return row.sellPrice / row.baselineCost
 }
 
 function logRow (label: string, row: CorruptionResult, parsed: ReturnType<typeof createVirtualItem>) {
@@ -215,7 +205,7 @@ function openBuy (row: CorruptionResult, e: MouseEvent) {
     category: ItemCategory.Gem,
     info: row.gem,
     gemLevel: row.gem.gem!.maxLevel,
-    quality: 20
+    quality: row.viaGemcutter ? 0 : 20
   })
 
   logRow('buy', row, parsed)
@@ -262,28 +252,6 @@ function dispatchPriceCheck (parsed: ReturnType<typeof createVirtualItem>, e: Mo
   padding: theme('spacing.1');
   background: theme('colors.gray.800');
   border-radius: theme('borderRadius.DEFAULT');
-}
-
-.filterBtn {
-  @apply rounded;
-  @apply px-2 py-1;
-  @apply bg-gray-900;
-  @apply text-gray-400;
-  flex-shrink: 0;
-  box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.6);
-
-  &:hover {
-    @apply bg-gray-700;
-    @apply text-gray-100;
-  }
-}
-
-.filterBtnActive {
-  @apply text-yellow-500;
-
-  &:hover {
-    @apply text-yellow-400;
-  }
 }
 
 .filterInput {

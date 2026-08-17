@@ -5,4 +5,5 @@ export interface GemCorruptionWidget extends Widget {
   includeTransfigured: boolean
   includeAwakened: boolean
   includeUnconfirmed: boolean
+  minProfitMultiple: number
 }
