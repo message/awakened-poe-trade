@@ -46,7 +46,9 @@ export function createFilters (
     if (!opts.currency) {
       filters.trade.currency = 'chaos_divine'
     }
-    filters.trade.collapseMerchant = true
+    if (item.info.refName !== 'Mercenary Warrant') {
+      filters.trade.collapseMerchant = true
+    }
   }
 
   if (item.category === ItemCategory.Gem) {
@@ -86,11 +88,14 @@ export function createFilters (
   if (item.info.refName === 'Scrying Orb') {
     filters.searchExact = {
       baseType: item.info.name,
-      baseTypeTrade: item.mapArea!.tradeDisc!,
-      discriminatorTrade: item.info.tradeDisc!
+      baseTypeTrade: t(opts, item.info),
+      sub: {
+        baseType: item.mapArea!.name,
+        baseTypeTrade: item.mapArea!.tradeDisc!,
+        discriminatorTrade: item.info.tradeDisc!,
+        disabled: false
+      }
     }
-    filters.scryingMapArea = item.mapArea!.name
-
     return filters
   }
   if (
@@ -274,12 +279,7 @@ export function createFilters (
     // item.isCorrupted && -- let the buyer corrupt
     (item.category === ItemCategory.Jewel || item.category === ItemCategory.AbyssJewel))
 
-  if (!item.isUnmodifiable && (
-    item.rarity === ItemRarity.Normal ||
-    item.rarity === ItemRarity.Magic ||
-    item.rarity === ItemRarity.Rare ||
-    item.rarity === ItemRarity.Unique
-  )) {
+  if (!item.isUnmodifiable && (item.info.craftable || item.rarity === ItemRarity.Unique)) {
     filters.corrupted = {
       value: item.isCorrupted,
       exact: forAdornedJewel
@@ -301,11 +301,11 @@ export function createFilters (
       value: 'magic',
       disabled: true
     }
-  } else if (
+  } else if (item.info.craftable && (
     item.rarity === ItemRarity.Normal ||
     item.rarity === ItemRarity.Magic ||
     item.rarity === ItemRarity.Rare
-  ) {
+  )) {
     filters.rarity = {
       value: 'nonunique',
       disabled: false
@@ -465,6 +465,15 @@ function createGemFilters (
       baseType: item.info.name,
       baseTypeTrade: t(opts, normalGem),
       discriminatorTrade: item.info.tradeDisc!
+    }
+  }
+
+  if (item.vaalGem) {
+    filters.searchExact.sub = {
+      baseType: item.vaalGem.name,
+      baseTypeTrade: t(opts, item.vaalGem),
+      discriminatorTrade: item.info.tradeDisc,
+      disabled: false
     }
   }
 

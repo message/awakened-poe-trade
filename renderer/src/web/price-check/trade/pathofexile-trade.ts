@@ -1,10 +1,11 @@
 import { ItemInfluence, ItemCategory } from '@/parser'
-import { ItemFilters, StatFilter, INTERNAL_TRADE_IDS, InternalTradeId } from '../filters/interfaces'
+import { ItemFilters, StatFilter, FilterOrGroup, INTERNAL_TRADE_IDS, InternalTradeId, FilterTag } from '../filters/interfaces'
 import { setProperty as propSet } from 'dot-prop'
 import { DateTime } from 'luxon'
 import { Host } from '@/web/background/IPC'
 import { TradeResponse, Account, getTradeEndpoint, adjustRateLimits, RATE_LIMIT_RULES, preventQueueCreation } from './common'
 import { stat, STAT_BY_REF_V2, pseudoStatByRef } from '@/assets/data'
+import { decodeFamilyFromSource as decodeMercenarySupports } from '../filters/pseudo/mercenary'
 import { RateLimiter } from './RateLimiter'
 import { ModifierType } from '@/parser/modifiers'
 import { Cache } from './Cache'
@@ -90,7 +91,7 @@ interface TradeRequest {
     name?: string | { discriminator: string, option: string }
     type?: string | { discriminator: string, option: string }
     stats: Array<{
-      type: 'and' | 'if' | 'count' | 'not'
+      type: 'and' | 'if' | 'count' | 'not' | 'mercenary'
       value?: FilterRange
       filters: Array<{
         id: string
@@ -205,6 +206,8 @@ interface TradeRequest {
   }
 }
 
+type TradeStatGroup = TradeRequest['query']['stats'][number]
+
 export interface SearchResult {
   id: string
   result: string[]
@@ -258,7 +261,7 @@ export interface PricingResult {
   ign: string
 }
 
-export function createTradeRequest (filters: ItemFilters, stats: StatFilter[]) {
+export function createTradeRequest (filters: ItemFilters, stats: FilterOrGroup[]) {
   const body: TradeRequest = {
     query: {
       status: {
@@ -412,7 +415,7 @@ export function createTradeRequest (filters: ItemFilters, stats: StatFilter[]) {
   }
 
   for (const stat of stats) {
-    if (!stat.tradeId[0].startsWith('item.')) continue
+    if (stat.group || !stat.tradeId[0].startsWith('item.')) continue
 
     if (stat.tradeId[0] === 'item.has_empty_modifier') {
       const TARGET_ID = {
@@ -552,8 +555,16 @@ export function createTradeRequest (filters: ItemFilters, stats: StatFilter[]) {
     }
   }
 
-  type BareStatFilter = Omit<StatFilter, 'statRef' | 'text' | 'tag' | 'sources'>
-  const realStats: BareStatFilter[] = stats.filter(stat =>
+  stats = stats.map(stat => {
+    if (!stat.group && stat.tag === FilterTag.MercenaryPrimary) {
+      return { ...stat, disabled: false }
+    }
+    return stat
+  })
+
+  type NoUiStatFilter = Pick<StatFilter, 'not' | keyof BareStatFilter>
+  const realStats: NoUiStatFilter[] = stats.filter((stat): stat is StatFilter =>
+    !stat.group &&
     !INTERNAL_TRADE_IDS.includes(stat.tradeId[0]))
   if (filters.veiled) {
     for (const statRef of filters.veiled.statRefs) {
@@ -578,27 +589,124 @@ export function createTradeRequest (filters: ItemFilters, stats: StatFilter[]) {
   }
 
   const qAnd = query.stats[0]
-  const qNot: TradeRequest['query']['stats'][number] = {
+  const qNot: TradeStatGroup = {
     type: 'not',
     filters: []
   }
 
+  for (const group of stats) {
+    if (group.group === 'not') {
+      query.stats.push({
+        type: 'not',
+        disabled: group.meta.disabled,
+        filters: group.stats.flatMap(stat => everyTradeIdToQuery(stat))
+      })
+    } else if (group.group === 'mercenary') {
+      const { meta: skill, stats } = group
+
+      if (skill.tag === FilterTag.MercenaryPrimary) {
+        appendAndFilter({ ...skill, disabled: false }, qAnd, query.stats)
+      }
+
+      const socketedSupports = stats.filter(stat => !stat.not && !INTERNAL_TRADE_IDS.includes(stat.tradeId[0]))
+      const enabledSocketedCount = socketedSupports.filter(stat => !stat.disabled).length
+
+      const localNotMode = stats.some(stat => stat.tradeId[0] === 'item.mercenary_6link')
+      const localNotStats = (localNotMode) ? stats.filter(stat => stat.not && !stat.disabled) : []
+
+      for (const stat of stats) {
+        if (skill.disabled || enabledSocketedCount === 5) break
+
+        if (stat.not) {
+          if (localNotMode) continue
+
+          // add only when enabled, so we don't clutter web UI when players
+          // want to open in a browser and check the filters applied
+          if (!stat.disabled) {
+            qNot.filters.push(...everyTradeIdToQuery(stat))
+          }
+        } else if (stat.tradeId[0] === 'item.mercenary_6link') {
+          const forceEnabled = (stat.disabled && localNotStats.length > 0)
+          if (stat.disabled && !forceEnabled) continue
+
+          const possibleSupports = stat.sources
+            .map(source => decodeMercenarySupports(source))
+            .filter(family => !localNotStats.some(notStat =>
+              notStat.statRef === family[0].mercenary!.canonical ||
+              notStat.statRef === family[0].ref
+            ))
+          let tier3Count = (typeof stat.roll?.min === 'number') ? Math.min(Math.max(stat.roll.min, 0), 5) : 0
+          if (forceEnabled) {
+            tier3Count = 0
+          }
+
+          if (tier3Count < 5) {
+            // 6-Link group
+            query.stats.push({
+              type: 'mercenary',
+              disabled: false,
+              ...weightedGroupToQuery({
+                allOf: [skill.tradeId],
+                someOf: {
+                  min: 5,
+                  ids: possibleSupports.map(family => {
+                    if (family.length > 2) {
+                      const minTier = (family[0].mercenary!.syntheticFamily) ? 3 : 2
+                      family = family.filter(stat => stat.mercenary!.tier! >= minTier)
+                    }
+                    return family.flatMap(stat => stat.trade.ids[ModifierType.Pseudo])
+                  })
+                }
+              })
+            })
+          }
+
+          if (tier3Count > 0) {
+            // Tier-3 Gems group
+            query.stats.push({
+              type: 'mercenary',
+              disabled: false,
+              ...weightedGroupToQuery({
+                allOf: [skill.tradeId],
+                someOf: {
+                  min: tier3Count,
+                  ids: possibleSupports.map(family => {
+                    // we simply count any last gem in the family as Tier 3,
+                    // users can override this with "Not" filter, e.g. to remove "Knockback (Tier: 1)"
+                    return family[family.length - 1].trade.ids[ModifierType.Pseudo]
+                  })
+                }
+              })
+            })
+          }
+        }
+      }
+
+      // not using `weightedGroupToQuery` for better trade site experience
+      query.stats.push({
+        type: 'mercenary',
+        value: (!skill.disabled && enabledSocketedCount)
+          ? { min: 1 + enabledSocketedCount }
+          : undefined,
+        // for a Skill without any checked Support Gems we use a simple AND filter below
+        disabled: skill.disabled || !enabledSocketedCount,
+        filters: [
+          ...everyTradeIdToQuery(skill),
+          ...socketedSupports.flatMap(stat => everyTradeIdToQuery(stat))
+        ]
+      })
+
+      if (!skill.disabled && !enabledSocketedCount) {
+        appendAndFilter(skill, qAnd, query.stats)
+      }
+    }
+  }
+
   for (const stat of realStats) {
     if (stat.not) {
-      for (const id of stat.tradeId) {
-        qNot.filters.push(tradeIdToQuery(id, stat))
-      }
+      qNot.filters.push(...everyTradeIdToQuery(stat))
     } else {
-      if (stat.tradeId.length === 1) {
-        qAnd.filters.push(tradeIdToQuery(stat.tradeId[0], stat))
-      } else {
-        query.stats.push({
-          type: 'count',
-          value: { min: 1 },
-          disabled: stat.disabled,
-          filters: stat.tradeId.map(id => tradeIdToQuery(id, stat))
-        })
-      }
+      appendAndFilter(stat, qAnd, query.stats)
     }
   }
 
@@ -705,7 +813,61 @@ function getMinMax (roll: StatFilter['roll'], divisor: number) {
   return !roll.tradeInvert ? { min: a, max: b } : { min: b, max: a }
 }
 
-function tradeIdToQuery (id: string, stat: Pick<StatFilter, 'roll' | 'option' | 'disabled'>) {
+interface WeightedGroup {
+  someOf?: { min: number, ids: Array<StatFilter['tradeId']> }
+  allOf?: Array<StatFilter['tradeId']>
+}
+
+function weightedGroupToQuery (group: WeightedGroup): Pick<TradeStatGroup, 'value' | 'filters'> {
+  const someOf = group.someOf ?? { min: 0, ids: [] }
+  const allOf = group.allOf ?? []
+
+  // max possible surplus from `someOf` ids
+  const surplus = Math.max(0, someOf.ids.length - someOf.min)
+  // the weight for all `allOf` conditions must overpower the `someOf` surplus
+  const weight = surplus + 1
+
+  const totalMin = someOf.min + allOf.length * weight
+  const flatIds: string[] = someOf.ids.flatMap(familyIds => familyIds)
+
+  for (const familyIds of allOf) {
+    for (const id of familyIds) {
+      for (let i = 0; i < weight; i++) {
+        flatIds.push(id)
+      }
+    }
+  }
+
+  return {
+    value: { min: totalMin },
+    filters: flatIds.map(id => ({ id }))
+  }
+}
+
+type BareStatFilter = Pick<StatFilter, 'roll' | 'option' | 'disabled' | 'tradeId'>
+
+function appendAndFilter (
+  stat: BareStatFilter,
+  defaultAndGroup: TradeStatGroup,
+  allGroups: TradeStatGroup[]
+): void {
+  if (stat.tradeId.length === 1) {
+    defaultAndGroup.filters.push(tradeIdToQuery(stat.tradeId[0], stat))
+  } else {
+    allGroups.push({
+      type: 'count',
+      value: { min: 1 },
+      disabled: stat.disabled,
+      filters: everyTradeIdToQuery(stat)
+    })
+  }
+}
+
+function everyTradeIdToQuery (stat: BareStatFilter) {
+  return stat.tradeId.map(id => tradeIdToQuery(id, stat))
+}
+
+function tradeIdToQuery (id: string, stat: BareStatFilter) {
   let roll = stat.roll
 
   const divMinMax = id.startsWith('{div_by_100}') ? 100 : 1
