@@ -11,8 +11,6 @@
         :filter="{ disabled: false }" :text="t('item.map_foil_reward', [filters.mapCompletionReward.name])" />
       <filter-btn-numeric v-if="filters.areaLevel"
         :filter="filters.areaLevel" :name="t('item.area_level')" />
-      <filter-btn-numeric v-if="filters.heistWingsRevealed"
-        :filter="filters.heistWingsRevealed" :name="t('item.heist_wings_revealed')" />
       <filter-btn-numeric v-if="filters.sentinelCharge"
         :filter="filters.sentinelCharge" :name="t('item.sentinel_charge')" />
       <filter-btn-logical v-if="filters.mapBlighted" readonly
@@ -67,13 +65,11 @@
         <template v-for="filter of filteredStats">
           <filter-group v-if="filter.group" :key="`group_${filter.meta.tag}_${filter.meta.text}`"
             :group="filter"
-            :item="item"
-            @submit="handleStatsSubmit" />
+            :item="item" />
           <filter-modifier v-else :key="`${filter.tag}_${filter.text}`"
             :filter="filter"
             :item="item"
-            :show-sources="showFilterSources"
-            @submit="handleStatsSubmit" />
+            :show-sources="showFilterSources" />
         </template>
         <div v-if="!filteredStats.length && !showUnknownMods"
           class="border-b border-gray-700 py-2">{{ t('filters.empty') }}</div>
