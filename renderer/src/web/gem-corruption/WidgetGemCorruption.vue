@@ -27,7 +27,7 @@
                 <span :class="$style.value">{{ fmt(row.sellPrice).text }}
                   <img :src="fmt(row.sellPrice).icon" :class="$style.currencyIcon">
                   <span :class="row.profit >= 0 ? $style.profitPositive : $style.profitNegative">
-                    ({{ row.profit >= 0 ? '+' : '' }}{{ fmt(row.profit).text }}, {{ (row.profitMargin * 100).toFixed(0) }}%, {{ sellBuyRatio(row).toFixed(1) }}x)
+                    ({{ row.profit >= 0 ? '+' : '' }}{{ fmt(row.profit).text }}, {{ sellBuyRatio(row).toFixed(1) }}x)
                   </span>
                 </span>
               </button>
@@ -138,8 +138,9 @@ function isAwakened (gem: BaseType) {
   return gem.refName.startsWith('Awakened ')
 }
 
-// old saved widget configs predate this field and won't have it set
-const minProfitMultiple = computed(() => props.config.minProfitMultiple || 7)
+// old saved widget configs predate this field and won't have it set - but 0 is a
+// valid, deliberate "no filter" value and must not fall back to the default
+const minProfitMultiple = computed(() => props.config.minProfitMultiple ?? 7)
 
 const rows = computed(() => {
   const search = filterValue.value.trim().toLowerCase()

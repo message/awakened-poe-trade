@@ -66,12 +66,27 @@ export function computeCorruptionEv (gem: BaseType, prices: PriceLookup): Corrup
       ? undefined
       : value
 
-  const corruptedSame = sane(price('GEM', gem.refName, `${baseLevel}/20c`))
-  const corruptedLevelUp = sane(price('GEM', gem.refName, `${baseLevel + 1}/20c`))
+  // poe.ninja's variant strings normally carry a quality tier ("4/20c"), but for
+  // low-liquidity gems - Awakened supports, Empower/Enlighten - it collapses to a bare
+  // level ("4c") with no quality tier at all. Without this fallback every one of those
+  // gems reads as having no listing and gets dropped entirely (see the null-return below),
+  // regardless of includeAwakened - so try the bare form whenever the quality-tagged one
+  // isn't found.
+  const corruptedSame = sane(
+    price('GEM', gem.refName, `${baseLevel}/20c`) ??
+    price('GEM', gem.refName, `${baseLevel}c`)
+  )
+  const corruptedLevelUp = sane(
+    price('GEM', gem.refName, `${baseLevel + 1}/20c`) ??
+    price('GEM', gem.refName, `${baseLevel + 1}c`)
+  )
   // a Vaal Orb on a gem can just as easily drop its level by 1 as raise it - real
   // listings for this are rare (nobody sells a downgrade on purpose) but worth trying.
   const corruptedLevelDown = baseLevel > 1
-    ? sane(price('GEM', gem.refName, `${baseLevel - 1}/20c`))
+    ? sane(
+        price('GEM', gem.refName, `${baseLevel - 1}/20c`) ??
+        price('GEM', gem.refName, `${baseLevel - 1}c`)
+      )
     : undefined
   const corruptedQualityUp = sane(
     price('GEM', gem.refName, `${baseLevel}/23c`) ??

@@ -3,9 +3,9 @@
     <ui-toggle v-model="widget.includeTransfigured">{{ t(':transfigured') }}</ui-toggle>
     <ui-toggle v-model="widget.includeAwakened">{{ t(':awakened') }}</ui-toggle>
     <ui-toggle v-model="widget.includeUnconfirmed">{{ t(':unconfirmed') }}</ui-toggle>
-    <label class="flex items-center gap-2">
-      {{ t(':min_multiple') }}
-      <input type="number" min="1" step="0.5" class="rounded px-1 bg-gray-900 w-16"
+    <label class="flex flex-col gap-1">
+      <span>{{ t(':min_multiple') }}: {{ widget.minProfitMultiple > 0 ? `${widget.minProfitMultiple}x` : t(':min_multiple_off') }}</span>
+      <input type="range" min="0" max="20" step="0.5"
         v-model.number="widget.minProfitMultiple">
     </label>
   </div>

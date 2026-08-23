@@ -292,6 +292,7 @@
     "awakened": "Awakened",
     "unconfirmed": "Unconfirmed prices",
     "min_multiple": "Min sell/buy ratio",
+    "min_multiple_off": "Off",
     "tag_transfigured": "Transfigured",
     "tag_awakened": "Awakened",
     "loading": "Waiting for poe.ninja prices…",
