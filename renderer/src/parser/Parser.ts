@@ -7,9 +7,9 @@ import {
   StatBetter,
   BaseType
 } from '@/assets/data'
-import { ModifierType, sumStatsByModType } from './modifiers'
+import { ModifierType, ModifierMechanic, sumStatsByModType } from './modifiers'
 import { linesToStatStrings, tryParseTranslation, getRollOrMinmaxAvg, ParsedStat } from './stat-translations'
-import { ItemCategory, ACCESSORY } from './meta'
+import { ItemCategory, JEWELLERY } from './meta'
 import { IncursionRoom, ParsedItem, ItemInfluence, ItemRarity } from './ParsedItem'
 import { magicBasetype } from './magic-name'
 import { isModInfoLine, groupLinesByMod, parseModInfoLine, parseModType, ModifierInfo, ParsedModifier, ENCHANT_LINE, SCOURGE_LINE, IMPLICIT_LINE } from './advanced-mod-desc'
@@ -81,12 +81,15 @@ const parsers: Array<ParserFn | { virtual: VirtualParserFn }> = [
   parseModifiers, // scourge
   parseModifiers, // implicit
   parseModifiers, // explicit
+  { virtual: augmentModifiers },
   { virtual: transformToLegacyModifiers },
   { virtual: parseFractured },
-  { virtual: parseBlightedMap },
   { virtual: pickCorrectVariant },
+  { virtual: calcDisenchantDust },
   { virtual: calcBasePercentile }
 ]
+
+const VALUE_AUGMENTED = ' (augmented)'
 
 export function parseClipboard (clipboard: string): Result<ParsedItem, string> {
   try {
@@ -112,6 +115,9 @@ export function parseClipboard (clipboard: string): Result<ParsedItem, string> {
       }
 
       for (const section of sections) {
+        // workaround upstream bug
+        parseEldritchItem(section)
+
         const result = parser(section, parsed.value)
         if (result === 'SECTION_PARSED') {
           sections = sections.filter(s => s !== section)
@@ -153,24 +159,6 @@ function normalizeName (item: ParserState) {
     const baseType = magicBasetype(item.name)
     if (baseType) {
       item.name = baseType
-    }
-  }
-
-  if (item.rarity === ItemRarity.Normal ||
-      item.rarity === ItemRarity.Rare
-  ) {
-    if (item.baseType) {
-      if (_$.MAP_BLIGHTED.test(item.baseType)) {
-        item.baseType = _$.MAP_BLIGHTED.exec(item.baseType)![1]
-      } else if (_$.MAP_BLIGHT_RAVAGED.test(item.baseType)) {
-        item.baseType = _$.MAP_BLIGHT_RAVAGED.exec(item.baseType)![1]
-      }
-    } else {
-      if (_$.MAP_BLIGHTED.test(item.name)) {
-        item.name = _$.MAP_BLIGHTED.exec(item.name)![1]
-      } else if (_$.MAP_BLIGHT_RAVAGED.test(item.name)) {
-        item.name = _$.MAP_BLIGHT_RAVAGED.exec(item.name)![1]
-      }
     }
   }
 
@@ -230,6 +218,18 @@ function findInDatabase (item: ParserState) {
   }
 }
 
+export function makeIdentifiedUnique (uniqueInfo: BaseType, unidentified: ParsedItem): ParsedItem {
+  const newItem: ParsedItem = {
+    ...unidentified,
+    info: uniqueInfo,
+    uniqueBase: unidentified.info
+  }
+
+  calcDisenchantDust(newItem)
+
+  return Object.freeze(newItem)
+}
+
 function parseMapTier (item: ParserState) {
   const execResult = _$.MAP_TIER.exec(item.baseType || item.name)
   if (!execResult) return
@@ -277,6 +277,12 @@ function parseMap (section: string[], item: ParsedItem) {
     } else if (line.startsWith(_$.MAP_MORE_DIVINATION_CARDS)) {
       item.mapMoreDivCards = parseInt(line.slice(_$.MAP_MORE_DIVINATION_CARDS.length), 10)
       isParsed = 'SECTION_PARSED'
+    } else if (line.startsWith(_$.MAP_AREA)) {
+      const areaName = section[0].slice(_$.MAP_AREA.length)
+      const areaInfo = ITEM_BY_TRANSLATED('AREA', areaName)
+      if (!areaInfo) throw new Error('Unknown Area name.')
+      item.mapArea = areaInfo[0]
+      isParsed = 'SECTION_PARSED'
     } else if (_$.MAP_COMPLETION_REWARD.test(line)) {
       const rewardName = _$.MAP_COMPLETION_REWARD.exec(line)![1]
       const rewardInfo = ITEM_BY_TRANSLATED('UNIQUE', rewardName)
@@ -289,23 +295,6 @@ function parseMap (section: string[], item: ParsedItem) {
   return isParsed
 }
 
-function parseBlightedMap (item: ParsedItem) {
-  if (item.category !== ItemCategory.Map) return
-
-  const calc = item.statsByType.find(calc =>
-    calc.type === ModifierType.Implicit &&
-    calc.stat.ref.startsWith('Area is infested with Fungal Growths'))
-  if (calc !== undefined) {
-    if (calc.sources[0].contributes!.value === 9) {
-      item.mapBlighted = 'Blight-ravaged'
-      item.info.icon = ITEM_BY_REF('ITEM', 'Blight-ravaged Map')![0].icon
-    } else {
-      item.mapBlighted = 'Blighted'
-      item.info.icon = ITEM_BY_REF('ITEM', 'Blighted Map')![0].icon
-    }
-  }
-}
-
 function parseFractured (item: ParserState) {
   if (item.newMods.some(mod => mod.info.type === ModifierType.Fractured)) {
     item.isFractured = true
@@ -313,9 +302,17 @@ function parseFractured (item: ParserState) {
 }
 
 function pickCorrectVariant (item: ParserState) {
-  if (!item.info.disc) return
+  item.info = _pickCorrectVariant(item.infoVariants, item) ?? item.infoVariants[0]
+  if (item.info.unique) {
+    const baseVariants = ITEM_BY_REF('ITEM', item.info.unique.base)!
+    item.uniqueBase = _pickCorrectVariant(baseVariants, item) ?? baseVariants[0]
+  }
+}
 
-  for (const variant of item.infoVariants) {
+function _pickCorrectVariant (variants: BaseType[], item: ParsedItem): BaseType | undefined {
+  if (variants.length <= 1) return variants[0]
+
+  for (const variant of variants) {
     const cond = variant.disc!
 
     if (cond.propAR && !item.armourAR) continue
@@ -341,7 +338,7 @@ function pickCorrectVariant (item: ParserState) {
 
     if (cond.sectionText && !item.rawText.includes(cond.sectionText)) continue
 
-    item.info = variant
+    return variant
   }
 
   // it may happen that we don't find correct variant
@@ -679,13 +676,29 @@ function parseWeapon (section: string[], item: ParsedItem) {
 }
 
 function parseAccessory (section: string[], item: ParsedItem) {
-  if (!ACCESSORY.has(item.category!) && item.category !== ItemCategory.Quiver) return 'PARSER_SKIPPED'
+  if (!JEWELLERY.has(item.category!) && item.category !== ItemCategory.Quiver) return 'PARSER_SKIPPED'
 
-  if (parseMemoryStrandsNested(section, item)) {
-    return 'SECTION_PARSED'
+  let isParsed: SectionParseResult = 'SECTION_SKIPPED'
+
+  for (const line of section) {
+    if (line.endsWith(VALUE_AUGMENTED)) {
+      const found = tryParseTranslation({ string: line.slice(0, -VALUE_AUGMENTED.length), unscalable: true }, ModifierType.Pseudo, undefined)
+      if (found && found.stat.jewelleryQuality) {
+        item.quality = found.roll!.value
+        item.newMods.push({
+          info: { tags: [], type: ModifierType.Pseudo },
+          stats: [found]
+        })
+        isParsed = 'SECTION_PARSED'
+      }
+    }
   }
 
-  return 'SECTION_SKIPPED'
+  if (parseMemoryStrandsNested(section, item)) {
+    isParsed = 'SECTION_PARSED'
+  }
+
+  return isParsed
 }
 
 function parseLogbookArea (section: string[], item: ParsedItem) {
@@ -822,11 +835,9 @@ function parseModifiers (section: string[], item: ParsedItem) {
 }
 
 function parseMirrored (section: string[], item: ParsedItem) {
-  if (section.length === 1) {
-    if (section[0] === _$.MIRRORED) {
-      item.isMirrored = true
-      return 'SECTION_PARSED'
-    }
+  if (section[0] === _$.MIRRORED) {
+    item.isMirrored = true
+    return 'SECTION_PARSED'
   }
   return 'SECTION_SKIPPED'
 }
@@ -888,8 +899,8 @@ function parseScryingOrb (section: string[], item: ParsedItem) {
   if (item.info.refName !== 'Scrying Orb') return 'PARSER_SKIPPED'
 
   if (section.length === 1) {
-    if (section[0].startsWith(_$.SCRYING_MAP_AREA)) {
-      const areaName = section[0].slice(_$.SCRYING_MAP_AREA.length)
+    if (section[0].startsWith(_$.MAP_AREA)) {
+      const areaName = section[0].slice(_$.MAP_AREA.length)
       const areaInfo = ITEM_BY_TRANSLATED('AREA', areaName)
       if (!areaInfo) throw new Error('Unknown Area name.')
       item.mapArea = areaInfo[0]
@@ -897,6 +908,19 @@ function parseScryingOrb (section: string[], item: ParsedItem) {
     }
   }
   return 'SECTION_SKIPPED'
+}
+
+function parseEldritchItem (section: string[]): void {
+  // these don't have a dedicated section and are appended to last-ish one,
+  // it can be Explicit Mods section, Corrupted, or Mirrored line.
+  while (section.length) {
+    const lastLine = section[section.length - 1]
+    if (lastLine === _$.ITEM_EATER || lastLine === _$.ITEM_EXARCH) {
+      section.pop()
+    } else {
+      break
+    }
+  }
 }
 
 function parseSynthesised (section: string[], item: ParserState) {
@@ -1212,6 +1236,26 @@ function parseStatsFromMod (lines: string[], item: ParsedItem, modifier: ParsedM
   })))
 }
 
+function augmentModifiers (item: ParsedItem) {
+  for (const mod of item.newMods) {
+    if (item.isSynthesised && mod.info.type === ModifierType.Implicit) {
+      mod.info.mechanic ??= ModifierMechanic.Synthesised
+    }
+
+    for (const stat of mod.stats) {
+      if (stat.roll?.generation !== 'legacy' || stat.roll.unscalable) continue
+
+      if (item.rarity === ItemRarity.Unique && item.isCorrupted) {
+        stat.roll.generation = 'volatile'
+      } else if (item.rarity === ItemRarity.Rare && item.isMirrored &&
+        (item.category === ItemCategory.Ring || item.category === ItemCategory.Amulet)
+      ) {
+        stat.roll.generation = 'reflecting'
+      }
+    }
+  }
+}
+
 /**
  * @deprecated
  */
@@ -1220,9 +1264,7 @@ function transformToLegacyModifiers (item: ParsedItem) {
 }
 
 function calcBasePercentile (item: ParsedItem) {
-  const info = item.info.unique
-    ? ITEM_BY_REF('ITEM', item.info.unique.base)![0].armour
-    : item.info.armour
+  const info = item.uniqueBase?.armour ?? item.info.armour
   if (!info) return
 
   // Base percentile is the same for all defences.
@@ -1237,4 +1279,36 @@ function calcBasePercentile (item: ParsedItem) {
   } else if (item.armourWARD && info.ward) {
     item.basePercentile = calcPropPercentile(item.armourWARD, info.ward, QUALITY_STATS.WARD, item)
   }
+}
+
+function calcDisenchantDust (item: ParsedItem) {
+  if (!item.info.unique?.disenchantValue) return
+
+  let increaseByFactors = 0
+
+  // +50% per Influence Type
+  increaseByFactors += item.influences.length * 50
+
+  // +2% per 1% Item Quality
+  if (item.quality) {
+    increaseByFactors += item.quality * 2
+  }
+
+  // +50% per Corruption Implicit
+  if (item.isCorrupted) {
+    for (const mod of item.newMods) {
+      if (mod.info.mechanic === ModifierMechanic.Corruption) {
+        increaseByFactors += 50
+      }
+    }
+  }
+
+  const factorsMulti = (increaseByFactors + 100) / 100
+  const term1 = 50 // ilvl 46 and below
+  const term2 = 2 * (Math.min(Math.max(item.itemLevel!, 46), 68) - 46) // ilvl 47 to 68
+  const term3 = Math.floor(3 * (Math.min(Math.max(item.itemLevel!, 46), 68) - 46) / 11) // ilvl 47 to 68
+  const term4 = 25 * (Math.min(Math.max(item.itemLevel!, 68), 84) - 68) // ilvl 69 to 84
+  const totalMulti = 5 * (term1 + term2 + term3 + term4) * factorsMulti
+
+  item.dustEquivalent = Math.floor(item.info.unique.disenchantValue * totalMulti)
 }

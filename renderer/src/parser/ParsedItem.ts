@@ -40,7 +40,6 @@ export interface ParsedItem {
   areaItemQuantity?: number
   areaItemRarity?: number
   areaPackSize?: number
-  mapBlighted?: 'Blighted' | 'Blight-ravaged'
   mapCompletionReward?: BaseType
   mapTier?: number
   mapMoreMaps?: number
@@ -86,6 +85,7 @@ export interface ParsedItem {
   isFoil?: boolean
   isFoulborn?: boolean
   isVestigial?: boolean
+  dustEquivalent?: number
   statsByType: StatCalculated[]
   newMods: ParsedModifier[]
   unknownModifiers: Array<{
@@ -94,6 +94,7 @@ export interface ParsedItem {
   }>
   category?: ItemCategory
   info: BaseType
+  uniqueBase?: BaseType
   rawText: string
 }
 

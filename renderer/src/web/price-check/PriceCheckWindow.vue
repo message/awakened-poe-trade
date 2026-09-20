@@ -116,7 +116,8 @@ export default defineComponent({
         exactMinRoll: true,
         showCursor: true,
         requestPricePrediction: false,
-        rememberCurrency: false
+        merchantOnly: true,
+        defaultCurrency: null
       }
     }
   } satisfies WidgetSpec,
