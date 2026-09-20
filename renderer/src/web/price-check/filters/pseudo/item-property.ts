@@ -313,7 +313,7 @@ export function noSourcePseudoToFilter (opts: {
       },
       contributes: opts.roll
     }]
-  }, ctx.searchInRange, ctx.item)
+  }, ctx.searchInRange, ctx.item, ctx.exactMinRoll)
 
   filter.sources = []
   if (opts.disabled != null) filter.disabled = opts.disabled

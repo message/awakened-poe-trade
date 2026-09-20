@@ -41,6 +41,7 @@ export interface PriceCheckWidget extends Widget {
   hotkeyLocked: string | null
   showSeller: false | 'account' | 'ign'
   searchStatRange: number
+  exactMinRoll: boolean
   showRateLimitState: boolean
   apiLatencySeconds: number
   collapseListings: 'api' | 'app'

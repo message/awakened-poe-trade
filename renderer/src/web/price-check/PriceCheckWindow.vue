@@ -113,6 +113,7 @@ export default defineComponent({
         hotkeyLocked: 'Ctrl + Alt + D',
         showSeller: false,
         searchStatRange: 10,
+        exactMinRoll: true,
         showCursor: true,
         requestPricePrediction: false,
         rememberCurrency: false

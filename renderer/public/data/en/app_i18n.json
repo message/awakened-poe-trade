@@ -375,6 +375,7 @@
     "show_seller": "Show seller",
     "fill_rolls": "Fill stat values",
     "fill_roll_exact": "Exact value",
+    "exact_min_roll": "Search for the exact rolled value instead of a lower bound",
     "cursor_pos": "Show memorized cursor position",
     "extra_delay": "Extra time to prevent spurious Rate limiting",
     "warn_expensive": "Settings below are a compromise between increasing load on PoE website and convenient price checking / more accurate search.",

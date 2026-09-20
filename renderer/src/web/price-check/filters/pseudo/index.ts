@@ -336,7 +336,7 @@ export function filterPseudo (ctx: FiltersCreationContext) {
       stat: pseudoStatByRef(rule.pseudo)!,
       type: ModifierType.Pseudo,
       sources: sources
-    }, ctx.searchInRange, ctx.item)
+    }, ctx.searchInRange, ctx.item, ctx.exactMinRoll)
 
     filter.disabled = rule.disabled ?? true
 

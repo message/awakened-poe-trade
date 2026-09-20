@@ -50,6 +50,8 @@
         <ui-radio v-model="searchStatRange" :value="0">{{ t(':fill_roll_exact') }}</ui-radio>
       </div>
     </div>
+    <ui-checkbox class="mb-4"
+      v-model="exactMinRoll">{{ t(':exact_min_roll') }}</ui-checkbox>
     <!-- <ui-checkbox class="mb-4"
       v-model="rememberCurrency">{{ t(':remember_currency') }}</ui-checkbox> -->
     <ui-checkbox class="mb-4"
@@ -136,6 +138,7 @@ export default defineComponent({
       smartInitialSearch: configModelValue(() => configWidget.value, 'smartInitialSearch'),
       lockedInitialSearch: configModelValue(() => configWidget.value, 'lockedInitialSearch'),
       rememberCurrency: configModelValue(() => configWidget.value, 'rememberCurrency'),
+      exactMinRoll: configModelValue(() => configWidget.value, 'exactMinRoll'),
       searchStatRange: computed<number>({
         get () {
           return configWidget.value.searchStatRange
