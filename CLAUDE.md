@@ -18,7 +18,6 @@ Both parts are interdependent and communicate via WebSocket through a local HTTP
 # From renderer directory
 cd renderer
 npm install
-npm run make-index-files  # Must run before dev or build - generates binary index files
 npm run dev
 
 # In a second shell - from main directory
@@ -70,7 +69,7 @@ Key communication pattern:
 ### Data Management
 
 #### Asset Processing
-Before building or running dev, `npm run make-index-files` must be run to generate binary index files from NDJSON data:
+Binary index files are generated automatically from NDJSON data by the Vite plugin `src/assets/vite-plugin-make-indexes.ts` (on `dev` and `build` start, and on `.ndjson` changes in dev), so no manual step is needed:
 
 - **Input**: `public/data/{lang}/stats.ndjson` and `items.ndjson` files
 - **Output**: Binary `.index.bin` files using FNV-1a hashing for fast lookups

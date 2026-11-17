@@ -11,10 +11,6 @@ cd /d "%ROOT_DIR%\renderer"
 call npm ci
 if errorlevel 1 exit /b %errorlevel%
 
-echo ==^> renderer: npm run make-index-files
-call npm run make-index-files
-if errorlevel 1 exit /b %errorlevel%
-
 echo ==^> renderer: npm run build
 call npm run build
 if errorlevel 1 exit /b %errorlevel%

@@ -10,9 +10,6 @@ echo "==> renderer: npm ci"
 cd "$ROOT_DIR/renderer"
 npm ci
 
-echo "==> renderer: npm run make-index-files"
-npm run make-index-files
-
 echo "==> renderer: npm run build"
 npm run build
 
